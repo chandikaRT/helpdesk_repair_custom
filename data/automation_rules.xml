@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Server actions for automation rules ── -->
+
+    <record id="act_automation_repair_seq" model="ir.actions.server">
+        <field name="name">RR - Repair Seq.No</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+if record.name:
+ seq = env['ir.sequence'].next_by_code('repair.seq')
+ record.write({'name': seq})
+]]></field>
+    </record>
+
+    <record id="act_automation_auto_product_from_serial" model="ir.actions.server">
+        <field name="name">RR - Auto Select Product for RUG Repairs</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+if record.x_studio_serial_no:
+  company_id = env.context.get('allowed_company_ids', [env.user.company_id.id])[0]
+  company = env['res.company'].browse(company_id)
+
+  cust_location = env['stock.location'].search([('usage', '=', 'customer')], limit=1)
+  trans_line = env['stock.move.line'].search([('product_id', '=', record.x_studio_serial_no.product_id.id),('lot_id', '=', record.x_studio_serial_no.id),('picking_code', '=', 'outgoing'),('location_dest_id', '=', cust_location.id),('company_id', '=', company.id)], limit=1)
+  if trans_line:
+   so = env['sale.order'].search([('name', '=', trans_line.origin),('company_id', '=', company.id)], limit=1)
+   if so:
+    record['sale_order_id'] = so.id
+    record['x_studio_picking_id'] = trans_line.picking_id.id
+    record['x_studio_pick_id'] = trans_line.picking_id.id
+
+  record['product_id'] = record.x_studio_serial_no.product_id.id
+  record['lot_id'] = record.x_studio_serial_no.id
+
+  if record.x_studio_normal_repair_without_serial_no == True:
+    record['sale_order_id'] = False
+else:
+  if record.x_studio_normal_repair_without_serial_no == True:
+    record['sale_order_id'] = False
+    record['x_studio_picking_id'] = False
+    record['x_studio_pick_id'] = False
+    record['lot_id'] = False
+  else:
+    record['sale_order_id'] = False
+    record['x_studio_picking_id'] = False
+    record['x_studio_pick_id'] = False
+    record['product_id'] = False
+    record['lot_id'] = False
+]]></field>
+    </record>
+
+    <record id="act_automation_populate_repair_location" model="ir.actions.server">
+        <field name="name">RR - Auto Populate Repair Location</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+if record.x_studio_return_receipt_location != False:
+  record['x_studio_repair_location'] = record.x_studio_return_receipt_location
+else:
+  record['x_studio_repair_location'] = ''
+]]></field>
+    </record>
+
+    <record id="act_automation_clear_on_serial_change" model="ir.actions.server">
+        <field name="name">RR - Auto Select Product for RUG Repairs-33</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+record['sale_order_id'] = False
+record['x_studio_picking_id'] = False
+record['x_studio_pick_id'] = False
+record['product_id'] = False
+record['lot_id'] = False
+record['x_studio_sn_updated'] = False
+]]></field>
+    </record>
+
+    <record id="act_automation_validate_cancelled_delete" model="ir.actions.server">
+        <field name="name">RR - Validate Cancelled Tickets</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+if record.x_studio_cancelled == True:
+  raise UserError('Cancelled tickets can not be deleted.')
+]]></field>
+    </record>
+
+    <record id="act_automation_stage_company" model="ir.actions.server">
+        <field name="name">JIN - Company Id in Helpdesk Stage</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_stage"/>
+        <field name="state">code</field>
+        <field name="code"><![CDATA[
+company_id = env.context.get('allowed_company_ids', [env.user.company_id.id])[0]
+company = env['res.company'].browse(company_id)
+
+record['x_studio_company_id'] = company.id
+]]></field>
+    </record>
+
+    <!-- ── Automation rules ── -->
+
+    <record id="automation_repair_seq" model="base.automation">
+        <field name="action_server_id" ref="act_automation_repair_seq"/>
+        <field name="trigger">on_create</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="automation_auto_product_from_serial" model="base.automation">
+        <field name="action_server_id" ref="act_automation_auto_product_from_serial"/>
+        <field name="trigger">on_change</field>
+        <field name="active">True</field>
+        <field name="on_change_field_ids" eval="[(4, ref('helpdesk.field_helpdesk_ticket__ticket_type_id'))]"/>
+    </record>
+
+    <record id="automation_populate_repair_location" model="base.automation">
+        <field name="action_server_id" ref="act_automation_populate_repair_location"/>
+        <field name="trigger">on_change</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="automation_clear_on_serial_change" model="base.automation">
+        <field name="action_server_id" ref="act_automation_clear_on_serial_change"/>
+        <field name="trigger">on_change</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="automation_validate_cancelled_delete" model="base.automation">
+        <field name="action_server_id" ref="act_automation_validate_cancelled_delete"/>
+        <field name="trigger">on_unlink</field>
+        <field name="filter_domain">[["x_studio_cancelled","=",True]]</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="automation_stage_company" model="base.automation">
+        <field name="action_server_id" ref="act_automation_stage_company"/>
+        <field name="trigger">on_create</field>
+        <field name="active">True</field>
+    </record>
+
+</odoo>
