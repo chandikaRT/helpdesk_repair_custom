@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Helpdesk Studio Customization Report — Odoo 15</title>
+  <style>
+    :root {
+      --primary: #714B67;
+      --accent: #017e84;
+      --bg: #f7f5f7;
+      --card: #ffffff;
+      --border: #e0d8e0;
+      --text: #222;
+      --muted: #666;
+      --tag-bg: #eee6f0;
+      --tag-text: #5a3d6b;
+      --green: #1e7e34;
+      --red: #c0392b;
+      --yellow: #e67e22;
+      --blue: #2980b9;
+      --code-bg: #f4f0f4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Layout */
+    .page-header {
+      background: linear-gradient(135deg, var(--primary) 0%, #9b6f8a 100%);
+      color: #fff; padding: 40px 48px 32px;
+    }
+    .page-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+    .page-header .subtitle { font-size: 14px; opacity: 0.85; }
+    .page-header .meta { margin-top: 16px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .page-header .meta-item { background: rgba(255,255,255,0.15); border-radius: 6px; padding: 6px 14px; font-size: 13px; }
+    .page-header .meta-item strong { display: block; font-size: 11px; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
+
+    /* TOC */
+    .toc { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 24px 28px; margin-bottom: 32px; }
+    .toc h2 { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { padding: 3px 0; }
+
+    /* Stat Cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; text-align: center; }
+    .stat-card .num { font-size: 36px; font-weight: 700; color: var(--primary); }
+    .stat-card .label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    /* Sections */
+    .section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 28px; overflow: hidden; }
+    .section-header { background: var(--primary); color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 10px; }
+    .section-header h2 { font-size: 16px; font-weight: 600; }
+    .section-header .badge { background: rgba(255,255,255,0.25); border-radius: 12px; padding: 2px 10px; font-size: 12px; }
+    .section-body { padding: 24px; }
+
+    /* Sub-sections */
+    .subsection { margin-bottom: 24px; }
+    .subsection h3 { font-size: 14px; font-weight: 700; color: var(--primary); border-bottom: 2px solid var(--tag-bg); padding-bottom: 6px; margin-bottom: 12px; }
+
+    /* Tables */
+    .tbl-wrap { overflow-x: auto; border-radius: 6px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: #f0e9f0; }
+    th { text-align: left; padding: 9px 12px; font-weight: 600; color: var(--primary); white-space: nowrap; border-bottom: 1px solid var(--border); }
+    td { padding: 8px 12px; border-bottom: 1px solid #f0e9f0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf7fa; }
+    .mono { font-family: 'Courier New', monospace; font-size: 12px; color: #4a2d5a; }
+
+    /* Tags */
+    .tag { display: inline-block; background: var(--tag-bg); color: var(--tag-text); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; margin: 1px; }
+    .tag.green { background: #d4edda; color: #155724; }
+    .tag.red { background: #f8d7da; color: #721c24; }
+    .tag.blue { background: #d1ecf1; color: #0c5460; }
+    .tag.yellow { background: #fff3cd; color: #856404; }
+    .tag.gray { background: #e2e3e5; color: #383d41; }
+    .tag.orange { background: #fde8d3; color: #7d3c00; }
+
+    /* Code blocks */
+    .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; overflow-x: auto; white-space: pre-wrap; word-break: break-word; color: #3b1f4a; margin-top: 6px; }
+    .xml-block { background: #f0f4f0; border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: 12px 14px; font-family: 'Courier New', monospace; font-size: 11.5px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-break: break-word; color: #1a3a1a; margin-top: 6px; }
+
+    /* Accordion */
+    details { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+    details > summary { background: #f8f4f8; padding: 12px 16px; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--primary); user-select: none; list-style: none; display: flex; align-items: center; gap: 8px; }
+    details > summary::before { content: '▶'; font-size: 10px; transition: transform 0.2s; }
+    details[open] > summary::before { transform: rotate(90deg); }
+    details > summary:hover { background: #f0e9f0; }
+    details .detail-body { padding: 16px; }
+
+    /* Notes / callouts */
+    .callout { border-radius: 8px; padding: 14px 18px; margin: 12px 0; font-size: 13px; }
+    .callout.info { background: #e8f4f8; border-left: 4px solid var(--accent); color: #0c4a54; }
+    .callout.warn { background: #fff3cd; border-left: 4px solid #e67e22; color: #5a3c00; }
+    .callout.danger { background: #fde8e8; border-left: 4px solid #c0392b; color: #6b0d0d; }
+
+    /* Model group headers */
+    .model-pill { display: inline-block; background: var(--primary); color: #fff; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; margin-bottom: 12px; }
+
+    /* Two-col grid */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Footer */
+    .footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+  </style>
+</head>
+<body>
+
+<!-- ======================================================= HEADER -->
+<div class="page-header">
+  <h1>Helpdesk Module — Studio Customization Report</h1>
+  <div class="subtitle">Odoo 15 · Database: <strong>odoo</strong> · Generated: 2026-05-08</div>
+  <div class="meta">
+    <div class="meta-item"><strong>Module</strong>studio_customization</div>
+    <div class="meta-item"><strong>Custom Fields</strong>111</div>
+    <div class="meta-item"><strong>Custom Views</strong>8</div>
+    <div class="meta-item"><strong>Server Actions</strong>28</div>
+    <div class="meta-item"><strong>Automation Rules</strong>11</div>
+    <div class="meta-item"><strong>Reports</strong>6</div>
+    <div class="meta-item"><strong>Menu Items</strong>16+</div>
+    <div class="meta-item"><strong>Computed Fields</strong>17</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ======================================================= TOC -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#summary">Executive Summary</a></li>
+    <li><a href="#fields">Custom Fields (111)</a></li>
+    <li><a href="#views">View Customizations (8)</a></li>
+    <li><a href="#computed">Computed &amp; Related Fields (36)</a></li>
+    <li><a href="#buttons">Header Buttons &amp; Form Actions</a></li>
+    <li><a href="#serveractions">Server Actions (28)</a></li>
+    <li><a href="#automations">Automation Rules (11)</a></li>
+    <li><a href="#reports">Custom Reports (6)</a></li>
+    <li><a href="#menus">Menu Items</a></li>
+    <li><a href="#observations">Observations &amp; Notes</a></li>
+  </ol>
+</div>
+
+<!-- ======================================================= STATS -->
+<div class="stats-grid">
+  <div class="stat-card"><div class="num">111</div><div class="label">Custom Fields</div></div>
+  <div class="stat-card"><div class="num">8</div><div class="label">Custom Views</div></div>
+  <div class="stat-card"><div class="num">28</div><div class="label">Server Actions</div></div>
+  <div class="stat-card"><div class="num">11</div><div class="label">Automations</div></div>
+  <div class="stat-card"><div class="num">6</div><div class="label">PDF Reports</div></div>
+  <div class="stat-card"><div class="num">4</div><div class="label">Approval Rules</div></div>
+  <div class="stat-card"><div class="num">36</div><div class="label">Computed/Related</div></div>
+  <div class="stat-card"><div class="num">16+</div><div class="label">Menu Entries</div></div>
+</div>
+
+<!-- ======================================================= SECTION 1: SUMMARY -->
+<div class="section" id="summary">
+  <div class="section-header"><h2>1 · Executive Summary</h2></div>
+  <div class="section-body">
+    <p>The Helpdesk module has been significantly extended via Odoo Studio to implement a <strong>full repair &amp; warranty ticket management workflow</strong>. The customizations span four models and introduce complex multi-step repair lifecycle logic entirely within Studio — covering receipt intake, serial number tracking, two repair pathways (RUG/warranty vs. normal repair), factory routing, estimation, FSM task integration, cancellation, and document generation.</p>
+
+    <div class="callout info" style="margin-top:16px;">
+      <strong>Core workflow:</strong> A helpdesk ticket is the central repair job record. It drives stock transfers (receipts/returns), FSM field-service tasks, sale orders for billing, and stage-based approval gates — all orchestrated through Studio automation, computed fields, and header buttons.
+    </div>
+
+    <div class="two-col" style="margin-top:20px;">
+      <div>
+        <h3 style="color:var(--primary);margin-bottom:10px;">Models Affected</h3>
+        <table class="tbl-wrap" style="border:none;">
+          <thead><tr><th>Model</th><th>Fields Added</th><th>Views</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">helpdesk.ticket</td><td><span class="tag">108</span></td><td><span class="tag">4</span></td></tr>
+            <tr><td class="mono">helpdesk.stage</td><td><span class="tag">1</span></td><td><span class="tag">2</span></td></tr>
+            <tr><td class="mono">helpdesk.ticket.type</td><td><span class="tag">4</span></td><td><span class="tag">1</span></td></tr>
+            <tr><td class="mono">helpdesk.team</td><td><span class="tag">0</span></td><td><span class="tag">1</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 style="color:var(--primary);margin-bottom:10px;">Repair Type Classification</h3>
+        <table class="tbl-wrap" style="border:none;">
+          <thead><tr><th>Repair Type</th><th>Key Flag</th></tr></thead>
+          <tbody>
+            <tr><td>Repair Under Warranty (RUG)</td><td class="mono">x_studio_rug_repair = True</td></tr>
+            <tr><td>Normal Repair (With Serial No)</td><td class="mono">x_studio_normal_repair_with_serial_no</td></tr>
+            <tr><td>Normal Repair (Without Serial No)</td><td class="mono">x_studio_normal_repair_without_serial_no</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:20px;">
+      <div>
+        <h3 style="color:var(--primary);margin-bottom:10px;">Repair Routing</h3>
+        <table class="tbl-wrap" style="border:none;">
+          <thead><tr><th>Job Location</th><th>Flow</th></tr></thead>
+          <tbody>
+            <tr><td>Sales Centre Repair</td><td>Direct repair at branch</td></tr>
+            <tr><td>Factory Repair</td><td>Send to Factory → Receive at Factory → Repair → Send to Centre → Receive at Centre</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3 style="color:var(--primary);margin-bottom:10px;">Stage Automation Flags</h3>
+        <table class="tbl-wrap" style="border:none;">
+          <thead><tr><th>Flag</th><th>Triggers Auto-stage Change</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">x_studio_valid_invoiced_so</td><td>→ stage 3/22</td></tr>
+            <tr><td class="mono">x_studio_valid_confirmed_so</td><td>→ stage 10/29</td></tr>
+            <tr><td class="mono">x_studio_valid_confirmed2_so</td><td>→ stage 12/31</td></tr>
+            <tr><td class="mono">x_studio_valid_delivered_so</td><td>→ stage 9/28 or 11/30</td></tr>
+            <tr><td class="mono">x_studio_task_status</td><td>→ stage 9/28</td></tr>
+            <tr><td class="mono">x_studio_handed_over</td><td>→ stage 13/32</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 2: FIELDS -->
+<div class="section" id="fields">
+  <div class="section-header"><h2>2 · Custom Fields</h2><span class="badge">111 fields</span></div>
+  <div class="section-body">
+
+    <!-- helpdesk.ticket -->
+    <div class="subsection">
+      <span class="model-pill">helpdesk.ticket — 108 fields</span>
+
+      <!-- Group: Repair Type -->
+      <details open>
+        <summary>Repair Type &amp; Classification</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Related To</th><th>Store</th><th>Readonly</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_rug_repair</td><td>Repair Under Warranty</td><td><span class="tag blue">boolean</span></td><td class="mono">ticket_type_id.x_studio_rug</td><td><span class="tag green">yes</span></td><td><span class="tag green">yes</span></td></tr>
+                <tr><td class="mono">x_studio_rug_confirmed</td><td>RUG Confirmed</td><td><span class="tag blue">boolean</span></td><td class="mono">ticket_type_id.x_studio_rug_confirmed</td><td><span class="tag green">yes</span></td><td><span class="tag green">yes</span></td></tr>
+                <tr><td class="mono">x_studio_normal_repair_with_serial_no</td><td>Normal Repair (With Serial No)</td><td><span class="tag blue">boolean</span></td><td class="mono">ticket_type_id.x_studio_with_serial_no</td><td><span class="tag green">yes</span></td><td><span class="tag green">yes</span></td></tr>
+                <tr><td class="mono">x_studio_normal_repair_without_serial_no</td><td>Normal Repair (Without Serial No)</td><td><span class="tag blue">boolean</span></td><td class="mono">ticket_type_id.x_studio_without_serial_no</td><td><span class="tag green">yes</span></td><td><span class="tag green">yes</span></td></tr>
+                <tr><td class="mono">x_studio_quick_repair_status</td><td>Tested OK</td><td><span class="tag yellow">selection</span></td><td>—</td><td><span class="tag green">yes</span></td><td><span class="tag green">yes</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Serial / Product -->
+      <details>
+        <summary>Serial Number &amp; Product</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Relation</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_serial_no</td><td>Serial Number</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.production.lot</td><td>Primary serial; required for RUG/normal-with-serial</td></tr>
+                <tr><td class="mono">x_studio_serial_number</td><td>Serial Number-11</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.production.lot</td><td>Legacy/duplicate serial field</td></tr>
+                <tr><td class="mono">x_studio_sn_updated</td><td>SN Updated</td><td><span class="tag blue">boolean</span></td><td>—</td><td>Guards Update Serial button</td></tr>
+                <tr><td class="mono">x_studio_tracking</td><td>Tracking</td><td><span class="tag yellow">selection</span></td><td class="mono">product_id.tracking</td><td>Related: product tracking type</td></tr>
+                <tr><td class="mono">x_studio_repair_serial_created</td><td>Repair Serial Created</td><td><span class="tag blue">boolean</span></td><td>—</td><td>Set after Create Repair Serial action</td></tr>
+                <tr><td class="mono">x_studio_related_information</td><td>Related Information</td><td><span class="tag gray">binary</span></td><td>—</td><td>File attachment field</td></tr>
+                <tr><td class="mono">x_studio_warranty_card</td><td>Warranty Card</td><td><span class="tag gray">binary</span></td><td>—</td><td>Warranty card document upload</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: RUG Approval -->
+      <details>
+        <summary>RUG (Repair Under Warranty) Approval Flow</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_rug_approved</td><td>RUG Approved</td><td><span class="tag blue">boolean</span></td><td>Set by approval flow; locks most fields when True</td></tr>
+                <tr><td class="mono">x_studio_rug_request_sent</td><td>RUG Request Sent</td><td><span class="tag blue">boolean</span></td><td>Locks fields once request sent</td></tr>
+                <tr><td class="mono">x_studio_rug_approval_status</td><td>RUG Approval Status</td><td><span class="tag yellow">selection</span></td><td>Computed from sale order flags (approved/rejected)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Locations -->
+      <details>
+        <summary>Stock Locations</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Relation</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_return_receipt_location</td><td>Return Receipt Location</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.location</td><td>Required when user assigned; filtered by user's permitted locations</td></tr>
+                <tr><td class="mono">x_studio_repair_location</td><td>Repair Location</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.location</td><td>Read-only; auto-set</td></tr>
+                <tr><td class="mono">x_studio_source_location</td><td>Source Location</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.location</td><td>Related: user_id.x_studio_source_location</td></tr>
+                <tr><td class="mono">x_studio_source_location_1</td><td>Source Location</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.location</td><td>Related: user_id.x_studio_source_location_1 (duplicate)</td></tr>
+                <tr><td class="mono">x_studio_virtual_location</td><td>Virtual Location</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.location</td><td>Related: user_id.x_studio_virtual_location</td></tr>
+                <tr><td class="mono">x_studio_virtual_location_1</td><td>Virtual Location</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.location</td><td>Related: user_id.x_studio_virtual_location_1 (duplicate)</td></tr>
+                <tr><td class="mono">x_studio_virtual_location_id</td><td>Virtual Location Id</td><td><span class="tag gray">integer</span></td><td>—</td><td>Related: user_id.x_studio_virtual_location.id (used in button context)</td></tr>
+                <tr><td class="mono">x_studio_job_location</td><td>Job Location</td><td><span class="tag yellow">selection</span></td><td>—</td><td>Values: "Sales Centre Repair" / "Factory Repair"</td></tr>
+                <tr><td class="mono">x_studio_user_location_validation</td><td>User Location Validation</td><td><span class="tag blue">boolean</span></td><td>—</td><td>Computed: validates user access to selected location</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Stock Picking Flags -->
+      <details>
+        <summary>Stock Transfer (Picking) Tracking</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_pick_id</td><td>Pick Id</td><td><span class="tag gray">integer</span></td><td>Raw ID of linked picking (used in button context)</td></tr>
+                <tr><td class="mono">x_studio_picking_id</td><td>Picking Id</td><td><span class="tag orange">many2one</span></td><td class="mono">stock.picking</td><td>Linked stock picking record</td></tr>
+                <tr><td class="mono">x_studio_valid_return</td><td>Valid Return</td><td><span class="tag blue">boolean</span></td><td>Computed: any picking not cancelled</td></tr>
+                <tr><td class="mono">x_studio_valid_confirm_return</td><td>Valid Confirm Return</td><td><span class="tag blue">boolean</span></td><td>Computed: any picking done</td></tr>
+                <tr><td class="mono">x_x_studio_created_from_help_ticket_stock_picking_count</td><td>Repair Trans. (count)</td><td><span class="tag gray">integer</span></td><td>search_count on stock.picking; drives stat button</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Factory Repair Route -->
+      <details>
+        <summary>Factory Repair Route Flags</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_send_to_factory</td><td>Send to Factory</td><td><span class="tag blue">boolean</span></td><td>Set by "Send to Factory" button action</td></tr>
+                <tr><td class="mono">x_studio_receive_at_factory</td><td>Receive at Factory</td><td><span class="tag blue">boolean</span></td><td>Set by "Receive at Factory" button action</td></tr>
+                <tr><td class="mono">x_studio_send_to_centre</td><td>Send to Centre</td><td><span class="tag blue">boolean</span></td><td>Set by "Send to Sales Centre" button action</td></tr>
+                <tr><td class="mono">x_studio_receive_at_centre</td><td>Receive at Centre</td><td><span class="tag blue">boolean</span></td><td>Set by "Receive at Sales Centre" button action</td></tr>
+                <tr><td class="mono">x_studio_s_shipped_date</td><td>Shipped Date (Sales Centre)</td><td><span class="tag gray">datetime</span></td><td>When item shipped from sales centre to factory</td></tr>
+                <tr><td class="mono">x_studio_s_shipped_by</td><td>Shipped By (Sales Centre)</td><td><span class="tag orange">many2one</span></td><td class="mono">res.users</td></tr>
+                <tr><td class="mono">x_studio_s_received_date</td><td>Received Date (Sales Centre)</td><td><span class="tag gray">datetime</span></td><td>When item received back at sales centre</td></tr>
+                <tr><td class="mono">x_studio_s_received_by</td><td>Received By (Sales Centre)</td><td><span class="tag orange">many2one</span></td><td class="mono">res.users</td></tr>
+                <tr><td class="mono">x_studio_f_shipped_date</td><td>Shipped Date (Factory)</td><td><span class="tag gray">datetime</span></td><td>When factory ships item back</td></tr>
+                <tr><td class="mono">x_studio_f_shipped_by</td><td>Shipped By (Factory)</td><td><span class="tag orange">many2one</span></td><td class="mono">res.users</td></tr>
+                <tr><td class="mono">x_studio_f_received_date</td><td>Received Date (Factory)</td><td><span class="tag gray">datetime</span></td><td>When factory receives item</td></tr>
+                <tr><td class="mono">x_studio_f_received_by</td><td>Received By (Factory)</td><td><span class="tag orange">many2one</span></td><td class="mono">res.users</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Stage Automation Booleans -->
+      <details>
+        <summary>Stage Automation Booleans</summary>
+        <div class="detail-body">
+          <div class="callout warn">These flags are set programmatically by computed fields and server actions; they drive automatic stage advancement.</div>
+          <div class="tbl-wrap" style="margin-top:12px;">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Auto-advances to Stage</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_invoice_stage_updated</td><td>Invoice Stage Updated</td><td>Marker only</td></tr>
+                <tr><td class="mono">x_studio_valid_invoiced_so</td><td>Valid Invoiced SO</td><td>Stage 3 / 22</td></tr>
+                <tr><td class="mono">x_studio_valid_confirmed_so</td><td>Valid Confirmed SO</td><td>Stage 10 / 29</td></tr>
+                <tr><td class="mono">x_studio_valid_confirmed2_so</td><td>Valid Confirmed2 SO</td><td>Stage 12 / 31</td></tr>
+                <tr><td class="mono">x_studio_valid_delivered_so</td><td>Valid Delivered SO</td><td>Stage 9/28 or 11/30</td></tr>
+                <tr><td class="mono">x_studio_estimation_sent_stage_updated</td><td>Estimation Sent Stage Updated</td><td>Marker only</td></tr>
+                <tr><td class="mono">x_studio_estimation_approved_stage_updated</td><td>Estimation Approved Stage Updated</td><td>Guards "Change Repair Type To RUG" button</td></tr>
+                <tr><td class="mono">x_studio_repair_started_stage_updated</td><td>Repair Started Stage Updated</td><td>Marker only</td></tr>
+                <tr><td class="mono">x_studio_repair_complete_stage_updated</td><td>Repair Complete Stage Updated</td><td>Marker only</td></tr>
+                <tr><td class="mono">x_studio_task_status</td><td>Task Status</td><td>Stage 9 / 28 (FSM done)</td></tr>
+                <tr><td class="mono">x_studio_fsm_task_done</td><td>FSM Task Done</td><td>Upstream trigger for task_status</td></tr>
+                <tr><td class="mono">x_studio_handed_over</td><td>Handed Over</td><td>Stage 13 / 32</td></tr>
+                <tr><td class="mono">x_studio_material_availability</td><td>Material Availability</td><td>Selection from FSM task</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Cancel/Reopen -->
+      <details>
+        <summary>Cancellation &amp; Reopen Logic</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_cancelled</td><td>Cancelled</td><td><span class="tag blue">boolean</span></td><td>Primary cancel flag; makes many fields read-only</td></tr>
+                <tr><td class="mono">x_studio_cancelled_2</td><td>Cancelled-2</td><td><span class="tag blue">boolean</span></td><td>Secondary cancel for stage-10 specific cancellations</td></tr>
+                <tr><td class="mono">x_studio_cancelled_by</td><td>Cancelled By</td><td><span class="tag orange">many2one</span></td><td class="mono">res.users</td></tr>
+                <tr><td class="mono">x_studio_cancelled_date</td><td>Cancelled Date</td><td><span class="tag gray">datetime</span></td><td>Shown on kanban when cancelled</td></tr>
+                <tr><td class="mono">x_studio_cancelled_stage_id</td><td>Cancelled Stage Id</td><td><span class="tag orange">many2one</span></td><td class="mono">helpdesk.stage — stores stage at time of cancel</td></tr>
+                <tr><td class="mono">x_studio_cancel_reason</td><td>Cancel Reason</td><td><span class="tag gray">text</span></td><td>Free-text cancel reason</td></tr>
+                <tr><td class="mono">x_studio_cancel_status</td><td>Cancel Status</td><td><span class="tag yellow">selection</span></td><td>Shown on kanban; hidden when "None"</td></tr>
+                <tr><td class="mono">x_studio_reopened</td><td>Reopened</td><td><span class="tag blue">boolean</span></td><td>Set by Reopen action</td></tr>
+                <tr><td class="mono">x_studio_reopened_by</td><td>Reopened By</td><td><span class="tag orange">many2one</span></td><td class="mono">res.users</td></tr>
+                <tr><td class="mono">x_studio_reopened_date</td><td>Reopened Date</td><td><span class="tag gray">datetime</span></td><td>Shown on kanban</td></tr>
+                <tr><td class="mono">x_studio_reopen_status</td><td>Reopen Status</td><td><span class="tag yellow">selection</span></td><td>Shown on kanban; hidden when "None"</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Sales / Billing -->
+      <details>
+        <summary>Sales Order &amp; Billing Integration</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_sale_order</td><td>Sales Order</td><td><span class="tag orange">many2one</span></td><td class="mono">sale.order — computed from FSM task</td></tr>
+                <tr><td class="mono">x_studio_balance_due</td><td>Balance Due</td><td><span class="tag gray">float</span></td><td>Outstanding balance on ticket</td></tr>
+                <tr><td class="mono">x_studio_fully_paid_so</td><td>Fully Paid SO</td><td><span class="tag blue">boolean</span></td><td>Computed from FSM task's fully_invoiced flag</td></tr>
+                <tr><td class="mono">x_studio_materials_used</td><td>Materials Used</td><td><span class="tag orange">many2one</span></td><td class="mono">product.product — related: x_studio_sale_order.order_line.product_id</td></tr>
+                <tr><td class="mono">x_studio_quantity</td><td>Quantity</td><td><span class="tag gray">float</span></td><td>Related: x_studio_sale_order.order_line.product_uom_qty</td></tr>
+                <tr><td class="mono">x_studio_unit_price</td><td>Unit Price</td><td><span class="tag gray">char</span></td><td>Related: x_studio_sale_order.pricelist_id.item_ids.price</td></tr>
+                <tr><td class="mono">x_studio_items</td><td>Items</td><td><span class="tag orange">many2many</span></td><td class="mono">product.product — populated by task_status compute</td></tr>
+                <tr><td class="mono">x_studio_qty</td><td>Qty</td><td><span class="tag gray">char</span></td><td>Manual qty field on tree view</td></tr>
+                <tr><td class="mono">x_studio_sales_price</td><td>Sales Price</td><td><span class="tag gray">char</span></td><td>Manual price field on tree view</td></tr>
+                <tr><td class="mono">x_studio_re_estimate_count</td><td>Re-estimate Count</td><td><span class="tag gray">integer</span></td><td>Computed from FSM task's sale order</td></tr>
+                <tr><td class="mono">x_studio_re_estimate_status</td><td>Re-estimate Status</td><td><span class="tag yellow">selection</span></td><td>"Re-estimated" when count &gt; 0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Stage Audit Log -->
+      <details>
+        <summary>Stage Change Audit Log (Created By/On 1–10)</summary>
+        <div class="detail-body">
+          <div class="callout info">Ten pairs of Created By / Created On fields form a stage audit log — each pair records who triggered a stage change and when. These populate the "Repair Status" page's Status Log group.</div>
+          <div class="tbl-wrap" style="margin-top:12px;">
+            <table>
+              <thead><tr><th>Fields (pair)</th><th>Type</th><th>Purpose</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_created_by_1 / x_studio_created_on_1</td><td>many2one(res.users) / datetime</td><td>Stage change #1</td></tr>
+                <tr><td class="mono">x_studio_created_by_2 / x_studio_created_on_2</td><td>many2one / datetime</td><td>Stage change #2</td></tr>
+                <tr><td class="mono">x_studio_created_by_3 / x_studio_created_on_3</td><td>many2one / datetime</td><td>Stage change #3</td></tr>
+                <tr><td class="mono">x_studio_created_by_4 / x_studio_created_on_4</td><td>many2one / datetime</td><td>Stage change #4</td></tr>
+                <tr><td class="mono">x_studio_created_by_5 / x_studio_created_on_5</td><td>many2one / datetime</td><td>Stage change #5</td></tr>
+                <tr><td class="mono">x_studio_created_by_6 / x_studio_created_on_6</td><td>many2one / datetime</td><td>Stage change #6</td></tr>
+                <tr><td class="mono">x_studio_created_by_7 / x_studio_created_on_7</td><td>many2one / datetime</td><td>Stage change #7</td></tr>
+                <tr><td class="mono">x_studio_created_by_8 / x_studio_created_on_8</td><td>many2one / datetime</td><td>Stage change #8</td></tr>
+                <tr><td class="mono">x_studio_created_by_9 / x_studio_created_on_9</td><td>many2one / datetime</td><td>Stage change #9</td></tr>
+                <tr><td class="mono">x_studio_created_by_10 / x_studio_created_on_10</td><td>many2one / datetime</td><td>Stage change #10</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Delivery -->
+      <details>
+        <summary>Delivery Details</summary>
+        <div class="detail-body">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Type</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_driver_name</td><td>Driver Name</td><td><span class="tag gray">char</span></td></tr>
+                <tr><td class="mono">x_studio_vehicle_details</td><td>Vehicle Details</td><td><span class="tag gray">char</span></td></tr>
+                <tr><td class="mono">x_studio_stage_date</td><td>Stage Date</td><td><span class="tag gray">datetime</span></td></tr>
+                <tr><td class="mono">x_studio_stage_name</td><td>Stage Name</td><td><span class="tag gray">char</span></td></tr>
+                <tr><td class="mono">x_studio_repair_reason</td><td>Repair Reason</td><td><span class="tag orange">many2many</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <!-- Group: Misc/Legacy -->
+      <details>
+        <summary>Miscellaneous / Likely Legacy Fields</summary>
+        <div class="detail-body">
+          <div class="callout warn">These fields appear unused or superseded based on naming patterns and duplicate structures.</div>
+          <div class="tbl-wrap" style="margin-top:12px;">
+            <table>
+              <thead><tr><th>Field Name</th><th>Label</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">x_studio_cccc</td><td>CCCC</td><td>char; related: ticket_type_id.name — appears to be a test field</td></tr>
+                <tr><td class="mono">x_studio_cccc3</td><td>CCCC3</td><td>many2one(helpdesk.stage); related: stage_id — appears to be a test field</td></tr>
+                <tr><td class="mono">x_studio_related_field_FNjnC</td><td>New Related Field</td><td>one2many(project.task); related: project_id.task_ids</td></tr>
+                <tr><td class="mono">x_studio_related_field_MiNdm</td><td>New Related Field</td><td>float; related: x_studio_sale_order.order_line.product_id.price</td></tr>
+                <tr><td class="mono">x_studio_related_field_QuqN1</td><td>New Related Field</td><td>integer; related: project_id.task_ids.helpdesk_ticket_id.id</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- helpdesk.stage -->
+    <div class="subsection" style="margin-top:24px;">
+      <span class="model-pill">helpdesk.stage — 1 field</span>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Relation</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">x_studio_company_id</td><td>Company</td><td><span class="tag orange">many2one</span></td><td class="mono">res.company</td><td>Auto-populated on create via automation rule using allowed_company_ids context</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- helpdesk.ticket.type -->
+    <div class="subsection" style="margin-top:24px;">
+      <span class="model-pill">helpdesk.ticket.type — 4 fields</span>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Field Name</th><th>Label</th><th>Type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">x_studio_rug</td><td>RUG</td><td><span class="tag blue">boolean</span></td><td>Marks this ticket type as a warranty repair type</td></tr>
+            <tr><td class="mono">x_studio_rug_confirmed</td><td>RUG Confirmed</td><td><span class="tag blue">boolean</span></td><td>Sub-type flag for confirmed RUG</td></tr>
+            <tr><td class="mono">x_studio_with_serial_no</td><td>With Serial No</td><td><span class="tag blue">boolean</span></td><td>Normal repair requiring a serial number</td></tr>
+            <tr><td class="mono">x_studio_without_serial_no</td><td>Without Serial No</td><td><span class="tag blue">boolean</span></td><td>Normal repair without serial number</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 3: VIEWS -->
+<div class="section" id="views">
+  <div class="section-header"><h2>3 · View Customizations</h2><span class="badge">8 views</span></div>
+  <div class="section-body">
+
+    <div class="two-col" style="margin-bottom:20px;">
+      <div>
+        <h3 style="color:var(--primary);margin-bottom:8px;">View Inventory</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>View ID</th><th>Model</th><th>Type</th><th>Priority</th></tr></thead>
+            <tbody>
+              <tr><td>4012</td><td class="mono">helpdesk.ticket</td><td><span class="tag">form</span></td><td>99</td></tr>
+              <tr><td>4013</td><td class="mono">helpdesk.ticket</td><td><span class="tag orange">form (button layer)</span></td><td>50000</td></tr>
+              <tr><td>4735</td><td class="mono">helpdesk.ticket</td><td><span class="tag blue">kanban</span></td><td>99</td></tr>
+              <tr><td>5027</td><td class="mono">helpdesk.ticket</td><td><span class="tag green">tree</span></td><td>900</td></tr>
+              <tr><td>5964</td><td class="mono">helpdesk.stage</td><td><span class="tag">form</span></td><td>99</td></tr>
+              <tr><td>4611</td><td class="mono">helpdesk.stage</td><td><span class="tag green">tree</span></td><td>99</td></tr>
+              <tr><td>5302</td><td class="mono">helpdesk.team</td><td><span class="tag green">tree</span></td><td>99</td></tr>
+              <tr><td>4610</td><td class="mono">helpdesk.ticket.type</td><td><span class="tag green">tree</span></td><td>99</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="callout info">
+          <strong>Two-layer form customization:</strong> The ticket form is customized through two separate view inheritance records. View 4012 (priority 99) adds fields and layout. View 4013 (priority 50,000) adds header buttons. This split is intentional — Studio separates structural changes from button definitions.
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticket Form -->
+    <details open>
+      <summary>helpdesk.ticket — Form View (id: 4012)</summary>
+      <div class="detail-body">
+        <p style="margin-bottom:12px;">The most complex view customization. Key changes:</p>
+        <ul style="margin-left:20px;line-height:2;">
+          <li><strong>Ticket name</strong> field: forced readonly with placeholder "New"; auto-named by sequence on create</li>
+          <li><strong>Stat button</strong> "Repair Trans." added: shows count of stock pickings created from this ticket</li>
+          <li><strong>Readonly conditions</strong> on team_id, user_id, partner_id, ticket_type_id — locked when RUG approved or request sent</li>
+          <li><strong>Fields added after ticket_type_id</strong>: rug_repair, rug_confirmed, normal_repair_with/without_serial_no, return_receipt_location (with user domain), repair_location (readonly), job_location</li>
+          <li><strong>Hidden state fields</strong> added after company_id: all 13 boolean stage-update flags (invisible=1)</li>
+          <li><strong>Serial / product area</strong>: x_studio_serial_number (primary), complex attrs for lot_id visibility based on repair type</li>
+          <li><strong>New notebook "Factory Repair Details"</strong> (visible only when job_location = "Factory Repair"): two groups for Sales Centre and Factory transfer dates</li>
+          <li><strong>New notebook page "Repair Status"</strong> — Delivery Details group (driver name, vehicle, stage date) + Status Log with Created By/On 1-10 pairs</li>
+          <li><strong>sale_order_id</strong> modified: domain filtered to partner, readonly when repair type set, invisible for "without serial no" type</li>
+          <li><strong>Stage statusbar</strong>: clickable set to False (users cannot manually click stages)</li>
+        </ul>
+        <div class="xml-block">&lt;!-- Stat button addition --&gt;
+&lt;xpath expr="//button[@name='action_view_fsm_tasks']" position="after"&gt;
+  &lt;button class="oe_stat_button" icon="fa-folder-open" type="action" name="2008"
+    attrs="{'invisible': [('x_x_studio_created_from_help_ticket_stock_picking_count','=',0)]}"&gt;
+    &lt;field widget="statinfo"
+      name="x_x_studio_created_from_help_ticket_stock_picking_count"
+      string="Repair Trans."/&gt;
+  &lt;/button&gt;
+&lt;/xpath&gt;
+
+&lt;!-- Stage statusbar locked --&gt;
+&lt;xpath expr="//field[@name='stage_id']" position="attributes"&gt;
+  &lt;attribute name="options"&gt;{'clickable': False}&lt;/attribute&gt;
+&lt;/xpath&gt;</div>
+      </div>
+    </details>
+
+    <!-- Button Layer -->
+    <details>
+      <summary>helpdesk.ticket — Form Button Layer (id: 4013, priority: 50000)</summary>
+      <div class="detail-body">
+        <p style="margin-bottom:12px;">This high-priority view adds all header action buttons. See Section 5 for the full button breakdown.</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Button Label</th><th>Action</th><th>Visibility Condition (simplified)</th></tr></thead>
+            <tbody>
+              <tr><td>Receipt (variant 1)</td><td>action 195</td><td>Not cancelled, has return, partner set, ticket type set, RUG repair, with serial no</td></tr>
+              <tr><td>Receipt (variant 2)</td><td>action 195</td><td>Not cancelled, without serial no flow, SN updated</td></tr>
+              <tr><td>Update Serial</td><td>action 2450</td><td>Not "without serial no" type, has serial, not yet updated</td></tr>
+              <tr><td>Create Repair Serial</td><td>action 1994</td><td>Without serial no type, serial not created, tracking=serial</td></tr>
+              <tr><td>Create Repair Route</td><td>action 1993</td><td>Without serial no type, serial not created, tracking=none</td></tr>
+              <tr><td>Change Repair Type To RUG</td><td>action 2159</td><td>Normal with serial, valid return, estimation not approved</td></tr>
+              <tr><td>Send to Factory</td><td>action 2001</td><td>Job location = Factory, not sent, valid return confirmed</td></tr>
+              <tr><td>Receive at Factory</td><td>action 2002</td><td>Job location = Factory, sent, not yet received</td></tr>
+              <tr><td>Send to Sales Centre</td><td>action 2007</td><td>Job location = Factory, FSM done, received at factory, not yet sent back</td></tr>
+              <tr><td>Receive at Sales Centre</td><td>action 2006</td><td>Job location = Factory, task done, not yet received at centre</td></tr>
+              <tr><td>Cancel</td><td>action 2220</td><td>Not already cancelled, not in terminal stages (3,4,7,8,9,10,11,12,13)</td></tr>
+              <tr><td>Cancel (stage-10)</td><td>action 2343</td><td>In stage 10 only, not cancelled-2</td></tr>
+              <tr><td>Reopen</td><td>action 2221</td><td>x_studio_cancelled = True</td></tr>
+              <tr><td>Generate Task (FSM)</td><td>action_generate_fsm_task</td><td>Not cancelled, not already created, valid return confirmed, factory received (if factory job)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <!-- Kanban -->
+    <details>
+      <summary>helpdesk.ticket — Kanban View (id: 4735)</summary>
+      <div class="detail-body">
+        <p style="margin-bottom:10px;">Adds the following fields to each kanban card:</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Field</th><th>Visibility</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">x_studio_quick_repair_status</td><td>Only when value = "Quick Repair"</td><td>Flags quick-turnaround repairs</td></tr>
+              <tr><td class="mono">x_studio_rug_approval_status</td><td>Only when RUG confirmed = True</td><td>Shows RUG approval state</td></tr>
+              <tr><td class="mono">x_studio_material_availability</td><td>Always</td><td>Material readiness from FSM task</td></tr>
+              <tr><td class="mono">create_date</td><td>Always</td><td>Ticket creation date</td></tr>
+              <tr><td class="mono">x_studio_cancel_status + x_studio_cancelled_date</td><td>When not "None"</td><td>Cancel status on card</td></tr>
+              <tr><td class="mono">x_studio_reopen_status + x_studio_reopened_date</td><td>When not "None"</td><td>Reopen status on card</td></tr>
+              <tr><td class="mono">x_studio_stage_date</td><td>Always</td><td>Last stage change date</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <!-- Tree -->
+    <details>
+      <summary>helpdesk.ticket — Tree View (id: 5027, priority: 900)</summary>
+      <div class="detail-body">
+        <p style="margin-bottom:10px;">Replaces default columns and adds repair-specific columns:</p>
+        <ul style="margin-left:20px;line-height:2;">
+          <li><strong>Removed</strong>: partner_id, team_id columns</li>
+          <li><strong>Added</strong> (all optional): partner_name, create_date, x_studio_materials_used, x_studio_quantity, x_studio_unit_price, x_studio_items (many2many tags), x_studio_qty, x_studio_sales_price, close_date, x_studio_repair_reason (many2many tags after sla_deadline)</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- Simpler views -->
+    <details>
+      <summary>helpdesk.stage — Form &amp; Tree | helpdesk.team — Tree | helpdesk.ticket.type — Tree</summary>
+      <div class="detail-body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>View</th><th>Change</th></tr></thead>
+            <tbody>
+              <tr><td>helpdesk.stage form</td><td>Adds <span class="mono">x_studio_company_id</span> field after the sequence field</td></tr>
+              <tr><td>helpdesk.stage tree</td><td>Adds <span class="mono">id</span> column (optional show) after fold column</td></tr>
+              <tr><td>helpdesk.team tree</td><td>Adds <span class="mono">id</span> column (optional show) after display_alias_name</td></tr>
+              <tr><td>helpdesk.ticket.type tree</td><td>Adds RUG, RUG Confirmed, With Serial No, Without Serial No optional columns after name</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 4: COMPUTED FIELDS -->
+<div class="section" id="computed">
+  <div class="section-header"><h2>4 · Computed &amp; Related Fields</h2><span class="badge">36 fields</span></div>
+  <div class="section-body">
+
+    <div class="subsection">
+      <h3>Computed Fields (with Python logic)</h3>
+      <div class="callout warn">These fields contain embedded Python compute methods managed by Studio. They have side effects: several auto-advance the ticket stage when conditions are met.</div>
+
+      <details style="margin-top:12px;">
+        <summary>x_studio_task_status — Task Status (most complex)</summary>
+        <div class="detail-body">
+          <p>Monitors FSM tasks for completion and auto-advances stage + populates materials/pricing fields.</p>
+          <div class="code-block">for record in self:
+    tasks = record.fsm_task_ids
+    if tasks:
+        done = all(t.fsm_done or record.x_studio_end_quick_repair for t in tasks)
+        # Check SO delivery state
+        so_delivered = all(t.sale_order_id.x_studio_valid_delivered_so for t in tasks if t.sale_order_id)
+        if done and so_delivered:
+            # Populate items/qty/sales_price from SO line
+            # Auto-advance stage to 9 or 28
+            record.write({'stage_id': 9, 'x_studio_items': ..., 'x_studio_qty': ...})</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>x_studio_handed_over — Handed Over</summary>
+        <div class="detail-body">
+          <p>Monitors stock.picking completion; when all pickings done, marks ticket as handed over and advances stage to 13/32.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>x_studio_valid_invoiced_so → stage 3/22</summary>
+        <div class="detail-body"><p>Checks FSM tasks' sale orders for invoice payment. When invoiced, auto-advances to the "Invoiced" stage.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_valid_confirmed_so → stage 10/29</summary>
+        <div class="detail-body"><p>Checks FSM tasks' x_studio_valid_confirm_so. When confirmed, advances to the corresponding confirmation stage.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_valid_confirmed2_so → stage 12/31</summary>
+        <div class="detail-body"><p>Secondary confirmation check — advances to stage 12/31 when x_studio_valid_confirm2_so is set on FSM tasks.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_valid_delivered_so → stage 9/28 or 11/30</summary>
+        <div class="detail-body"><p>Complex: checks both x_studio_valid_delivered_so and x_studio_valid_delivered_so2 on tasks. Routes to different stages based on which flag is set.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_fsm_task_done — FSM Task Done</summary>
+        <div class="detail-body"><p>Returns True when all FSM tasks are marked done (fsm_done) or quick repair is ended. Upstream trigger for x_studio_task_status.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_fully_paid_so — Fully Paid SO</summary>
+        <div class="detail-body"><p>Checks x_studio_fully_invoiced_so on FSM tasks' sale orders.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_rug_approval_status — RUG Approval Status</summary>
+        <div class="detail-body"><p>Reads from sale.order via FSM task; returns "Approved" / "Rejected" based on x_studio_rug_approved/x_studio_rug_rejected flags on the sale order.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_material_availability — Material Availability</summary>
+        <div class="detail-body"><p>Reads x_studio_material_availability from FSM task records.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_user_location_validation — User Location Validation</summary>
+        <div class="detail-body"><p>Validates that the return receipt location is accessible to the current user based on x_studio_users_stock_location on the stock.location model.</p></div>
+      </details>
+
+      <details>
+        <summary>x_studio_re_estimate_count / x_studio_re_estimate_status</summary>
+        <div class="detail-body"><p>Reads re-estimate count from FSM task sale orders. When count &gt; 0, sets status to "Re-estimated".</p></div>
+      </details>
+
+      <details>
+        <summary>x_x_studio_created_from_help_ticket_stock_picking_count</summary>
+        <div class="detail-body"><p>search_count on stock.picking filtered by x_studio_created_from_help_ticket = this ticket ID. Powers the "Repair Trans." stat button.</p></div>
+      </details>
+    </div>
+
+    <div class="subsection" style="margin-top:20px;">
+      <h3>Related Fields (field chains)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Label</th><th>Related Chain</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">x_studio_rug_repair</td><td>Repair Under Warranty</td><td class="mono">ticket_type_id.x_studio_rug</td></tr>
+            <tr><td class="mono">x_studio_rug_confirmed</td><td>RUG Confirmed</td><td class="mono">ticket_type_id.x_studio_rug_confirmed</td></tr>
+            <tr><td class="mono">x_studio_normal_repair_with_serial_no</td><td>Normal Repair (With SN)</td><td class="mono">ticket_type_id.x_studio_with_serial_no</td></tr>
+            <tr><td class="mono">x_studio_normal_repair_without_serial_no</td><td>Normal Repair (Without SN)</td><td class="mono">ticket_type_id.x_studio_without_serial_no</td></tr>
+            <tr><td class="mono">x_studio_tracking</td><td>Tracking</td><td class="mono">product_id.tracking</td></tr>
+            <tr><td class="mono">x_studio_stage_name</td><td>Stage Name</td><td class="mono">stage_id.name</td></tr>
+            <tr><td class="mono">x_studio_source_location</td><td>Source Location</td><td class="mono">user_id.x_studio_source_location</td></tr>
+            <tr><td class="mono">x_studio_virtual_location</td><td>Virtual Location</td><td class="mono">user_id.x_studio_virtual_location</td></tr>
+            <tr><td class="mono">x_studio_virtual_location_id</td><td>Virtual Location Id</td><td class="mono">user_id.x_studio_virtual_location.id</td></tr>
+            <tr><td class="mono">x_studio_materials_used</td><td>Materials Used</td><td class="mono">x_studio_sale_order.order_line.product_id</td></tr>
+            <tr><td class="mono">x_studio_quantity</td><td>Quantity</td><td class="mono">x_studio_sale_order.order_line.product_uom_qty</td></tr>
+            <tr><td class="mono">x_studio_unit_price</td><td>Unit Price</td><td class="mono">x_studio_sale_order.pricelist_id.item_ids.price</td></tr>
+            <tr><td class="mono">x_studio_sale_order</td><td>Sales Order</td><td class="mono">fsm_task_ids.sale_order_id (computed)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 5: BUTTONS -->
+<div class="section" id="buttons">
+  <div class="section-header"><h2>5 · Header Buttons &amp; Form Actions</h2></div>
+  <div class="section-body">
+    <div class="callout info" style="margin-bottom:16px;">All buttons are type="action" pointing to server actions. The stage statusbar is non-clickable — all stage transitions are driven by buttons or computed fields.</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Button</th><th>Action ID</th><th>Class</th><th>Confirm Prompt</th><th>Visibility Logic</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Receipt</strong> (normal with SN)</td><td>195</td><td>btn-primary</td><td>—</td>
+            <td>Not cancelled, use_product_returns, no valid return, ticket type set, RUG repair, with serial no</td>
+          </tr>
+          <tr>
+            <td><strong>Receipt</strong> (without SN flow)</td><td>195</td><td>btn-primary</td><td>—</td>
+            <td>Not cancelled, without serial no, SN updated</td>
+          </tr>
+          <tr>
+            <td><strong>Update Serial</strong></td><td>2450</td><td>btn-primary</td><td>—</td>
+            <td>Not "without SN" type, has serial no, not yet SN-updated</td>
+          </tr>
+          <tr>
+            <td><strong>Create Repair Serial</strong></td><td>1994</td><td>btn-primary</td><td>Are you sure you want to create repair serial no?</td>
+            <td>Without SN type, serial not created, tracking=serial</td>
+          </tr>
+          <tr>
+            <td><strong>Create Repair Route</strong></td><td>1993</td><td>btn-primary</td><td>Are you sure you want to create repair route?</td>
+            <td>Without SN type, serial not created, tracking=none</td>
+          </tr>
+          <tr>
+            <td><strong>Change Repair Type To RUG</strong></td><td>2159</td><td>btn-primary</td><td>Are you sure you want to change the repair type to RUG?</td>
+            <td>Normal with SN, valid return exists, estimation not yet approved</td>
+          </tr>
+          <tr>
+            <td><strong>Send to Factory</strong></td><td>2001</td><td>btn-primary</td><td>—</td>
+            <td>Job location = Factory Repair, not sent, valid return confirmed, not cancelled</td>
+          </tr>
+          <tr>
+            <td><strong>Receive at Factory</strong></td><td>2002</td><td>btn-primary</td><td>—</td>
+            <td>Job location = Factory Repair, sent to factory, not yet received</td>
+          </tr>
+          <tr>
+            <td><strong>Send to Sales Centre</strong></td><td>2007</td><td>btn-primary</td><td>—</td>
+            <td>FSM task done, received at factory, not yet sent to centre</td>
+          </tr>
+          <tr>
+            <td><strong>Receive at Sales Centre</strong></td><td>2006</td><td>btn-primary</td><td>—</td>
+            <td>Task done, not yet received at centre</td>
+          </tr>
+          <tr>
+            <td><strong>Generate Task</strong> (FSM)</td><td>action_generate_fsm_task</td><td>btn-primary</td><td>—</td>
+            <td>Not cancelled, FSM count=0, valid return &amp; confirm return, factory received (if factory)</td>
+          </tr>
+          <tr>
+            <td><strong>Cancel</strong></td><td>2220</td><td>btn-primary</td><td>Are you sure you want to cancel the repair ticket?</td>
+            <td>Not in terminal stages (3,4,7–13), not already cancelled, all required fields filled</td>
+          </tr>
+          <tr>
+            <td><strong>Cancel</strong> (stage-10)</td><td>2343</td><td>btn-primary</td><td>Are you sure you want to cancel the repair ticket?</td>
+            <td>In stage 10 only, not cancelled-2</td>
+          </tr>
+          <tr>
+            <td><strong>Reopen</strong></td><td>2221</td><td>btn-primary</td><td>Are you sure you want to reopen the repair ticket?</td>
+            <td>x_studio_cancelled = True</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn" style="margin-top:16px;">
+      <strong>Commented-out buttons:</strong> The button view XML contains several commented-out &lt;!--xpath...--&gt; blocks for "Request RUG Approval", "Approve RUG", "Send Customer Letter", "Send Final Notice", "Send Final Notice - Estimated", "Send Final Notice - Scrappage", "Send Reminding Letter" — these were likely iterated over during development and are preserved as reference.
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 6: SERVER ACTIONS -->
+<div class="section" id="serveractions">
+  <div class="section-header"><h2>6 · Server Actions</h2><span class="badge">28 actions on helpdesk.ticket</span></div>
+  <div class="section-body">
+
+    <div class="subsection">
+      <h3>Repair Workflow Actions (RR- prefix)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>1976</td><td>RR - Repair Seq.No</td><td>Assigns next sequence from <span class="mono">repair.seq</span> ir.sequence as the ticket name on create</td></tr>
+            <tr><td>1993</td><td>RR - Auto Create Repair Route</td><td>Creates stock picking route for "without serial no" repair types</td></tr>
+            <tr><td>1994</td><td>RR - Auto Create Repair Serial Nos</td><td>Creates stock production lot (serial number) for "without serial no" + tracking=serial repairs</td></tr>
+            <tr><td>2000</td><td>RR - Auto Populate Repair Location</td><td>Sets repair_location based on user/team settings; triggered on_change</td></tr>
+            <tr><td>1989</td><td>RR - Auto Select Product for RUG Repairs</td><td>Selects default product when ticket type changes to RUG; on_change trigger</td></tr>
+            <tr><td>1990</td><td>RR - Auto Select Product for RUG Repairs-2</td><td>Variant (inactive); on_write trigger</td></tr>
+            <tr><td>2451</td><td>RR - Auto Select Product for RUG Repairs-33</td><td>Active variant; on_change trigger</td></tr>
+            <tr><td>1992</td><td>RR - Auto Select Product for RUG Repairs-4</td><td>Inactive variant</td></tr>
+            <tr><td>2159</td><td>RR - Change Repair Type to RUG</td><td>Converts a normal repair ticket to RUG warranty type mid-flow</td></tr>
+            <tr><td>2450</td><td>RR - RR - Auto Select Product for RUG Repairs-22</td><td>Update Serial action — updates serial no on linked picking</td></tr>
+            <tr><td>2001</td><td>RR - Send to Factory</td><td>Creates factory-bound stock transfer, sets x_studio_send_to_factory flag and shipped date/by</td></tr>
+            <tr><td>2002</td><td>RR - Receive at Factory</td><td>Validates factory receipt, sets x_studio_receive_at_factory, records received_date/by</td></tr>
+            <tr><td>2007</td><td>RR - Send to Sales Centre</td><td>Creates return transfer from factory, sets x_studio_send_to_centre</td></tr>
+            <tr><td>2006</td><td>RR - Receive at Sales Centre</td><td>Validates receipt at sales centre, sets x_studio_receive_at_centre</td></tr>
+            <tr><td>2220</td><td>RR - Cancel Repair</td><td>Sets x_studio_cancelled, records stage/date/user, moves ticket to cancelled state</td></tr>
+            <tr><td>2343</td><td>RR - Cancel Repair-2</td><td>Stage-10 specific cancellation (sets x_studio_cancelled_2)</td></tr>
+            <tr><td>2221</td><td>RR - Reopen Repair</td><td>Clears cancelled flags, sets x_studio_reopened, moves back to previous stage</td></tr>
+            <tr><td>2222</td><td>RR - Validate Cancelled Tickets</td><td>Prevents deletion of cancelled tickets (on_unlink trigger)</td></tr>
+            <tr><td>1998</td><td>RR - Update RUG Approval in Pipeline</td><td>object_write action — updates RUG approval flag on related sale order pipeline</td></tr>
+            <tr><td>2426</td><td>Slowness - Test</td><td>Inactive performance test action</td></tr>
+            <tr><td>2933</td><td>Stage restriction for helpdesk based on users</td><td>Inactive — intended to restrict manual stage changes by user; on_write, currently disabled</td></tr>
+            <tr><td>2558</td><td>User Location Validation - Helpdesk</td><td>Raises UserError if user lacks access to the selected repair location (inactive)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection" style="margin-top:20px;">
+      <h3>Document / Letter Actions (bound to helpdesk.ticket)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>2269</td><td>Send Repair Customer Letter</td><td>Sends customer letter PDF (commented out of view but action exists)</td></tr>
+            <tr><td>2308</td><td>Send Final Notice</td><td>Bound to helpdesk.ticket; sends final notice report</td></tr>
+            <tr><td>2309</td><td>Send Final Notice - Estimated</td><td>Estimated value variant of final notice</td></tr>
+            <tr><td>2310</td><td>Send Final Notice - Scrappage</td><td>Scrappage variant of final notice</td></tr>
+            <tr><td>2311</td><td>Send Reminding Letter</td><td>Reminder letter action (commented out of view)</td></tr>
+            <tr><td>1784</td><td>Share</td><td>Standard share action bound to helpdesk.ticket</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection" style="margin-top:20px;">
+      <h3>Stage-Level Actions</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Model</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>2760</td><td>JIN - Company Id in Helpdesk Stage</td><td class="mono">helpdesk.stage</td><td>Auto-sets company on stage creation from context</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-block">company_id = env.context.get('allowed_company_ids', [env.user.company_id.id])[0]
+company = env['res.company'].browse(company_id)
+record['x_studio_company_id'] = company.id</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 7: AUTOMATIONS -->
+<div class="section" id="automations">
+  <div class="section-header"><h2>7 · Automation Rules</h2><span class="badge">11 rules total</span></div>
+  <div class="section-body">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Model</th><th>Trigger</th><th>Filter</th><th>Active</th><th>Module</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>329</td><td>JIN - Company Id in Helpdesk Stage</td><td class="mono">helpdesk.stage</td>
+            <td><span class="tag blue">on_create</span></td><td>—</td><td><span class="tag green">Yes</span></td><td>studio_customization</td>
+          </tr>
+          <tr>
+            <td>171</td><td>RR - Repair Seq.No</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag blue">on_create</span></td><td>—</td><td><span class="tag green">Yes</span></td><td>studio_customization</td>
+          </tr>
+          <tr>
+            <td>178</td><td>RR - Auto Populate Repair Location</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag yellow">on_change</span></td><td>—</td><td><span class="tag green">Yes</span></td><td>—</td>
+          </tr>
+          <tr>
+            <td>172</td><td>RR - Auto Select Product for RUG Repairs</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag yellow">on_change</span></td><td>—</td><td><span class="tag green">Yes</span></td><td>—</td>
+          </tr>
+          <tr>
+            <td>173</td><td>RR - Auto Select Product for RUG Repairs-2</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag gray">on_write</span></td><td>[]</td><td><span class="tag red">No</span></td><td>—</td>
+          </tr>
+          <tr>
+            <td>243</td><td>RR - Auto Select Product for RUG Repairs-33</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag yellow">on_change</span></td><td>[]</td><td><span class="tag green">Yes</span></td><td>—</td>
+          </tr>
+          <tr>
+            <td>175</td><td>RR - Auto Select Product for RUG Repairs-4</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag yellow">on_change</span></td><td>—</td><td><span class="tag red">No</span></td><td>—</td>
+          </tr>
+          <tr>
+            <td>201</td><td>RR - Validate Cancelled Tickets</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag red">on_unlink</span></td><td>[["x_studio_cancelled","=",True]]</td><td><span class="tag green">Yes</span></td><td>—</td>
+          </tr>
+          <tr>
+            <td>240</td><td>Slowness - Test</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag gray">on_create_or_write</span></td><td>["&amp;",["team_id","=",1],["ticket_type_id","!=",False]]</td><td><span class="tag red">No</span></td><td>—</td>
+          </tr>
+          <tr>
+            <td>344</td><td>Stage restriction for helpdesk based on users</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag gray">on_write</span></td><td>—</td><td><span class="tag red">No</span></td><td>—</td>
+          </tr>
+          <tr>
+            <td>252</td><td>User Location Validation - Helpdesk</td><td class="mono">helpdesk.ticket</td>
+            <td><span class="tag gray">on_create_or_write</span></td><td>[["stage_id","=",1]]</td><td><span class="tag red">No</span></td><td>studio_customization</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn" style="margin-top:16px;">
+      <strong>6 of 11 automation rules are inactive.</strong> The "Product Selection for RUG" rules have multiple versions; only the on_change variants (172, 243) are active, suggesting iterative development. Rules 173, 175, 240, 344, 252 are all disabled.
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 8: REPORTS -->
+<div class="section" id="reports">
+  <div class="section-header"><h2>8 · Custom PDF Reports</h2><span class="badge">6 reports</span></div>
+  <div class="section-body">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Report Name</th><th>Model</th><th>Type</th><th>Template Key</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>2094</td><td><strong>Repair Receipt</strong></td><td class="mono">helpdesk.ticket</td><td>qweb-pdf</td>
+            <td class="mono" style="font-size:11px;">studio_customization.studio_report_docume_73c7b165...</td>
+          </tr>
+          <tr>
+            <td>2093</td><td><strong>Repair Status</strong></td><td class="mono">helpdesk.ticket</td><td>qweb-pdf</td>
+            <td class="mono" style="font-size:11px;">studio_customization.studio_report_docume_4ba14515...</td>
+          </tr>
+          <tr>
+            <td>2237</td><td><strong>Customer Letter</strong></td><td class="mono">helpdesk.ticket</td><td>qweb-pdf</td>
+            <td class="mono" style="font-size:11px;">...73c7b165..._copy_1</td>
+          </tr>
+          <tr>
+            <td>2240</td><td><strong>Repair Final Notice</strong></td><td class="mono">helpdesk.ticket</td><td>qweb-pdf</td>
+            <td class="mono" style="font-size:11px;">...73c7b165..._copy_1_copy_1</td>
+          </tr>
+          <tr>
+            <td>2241</td><td><strong>Repair Final Notice - Scrappage</strong></td><td class="mono">helpdesk.ticket</td><td>qweb-pdf</td>
+            <td class="mono" style="font-size:11px;">...73c7b165..._copy_1_copy_1_copy_1</td>
+          </tr>
+          <tr>
+            <td>2420</td><td><strong>Helpdesk Ticket Report</strong></td><td class="mono">helpdesk.ticket</td><td>qweb-pdf</td>
+            <td class="mono" style="font-size:11px;">studio_customization.studio_report_docume_78e655c4...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout info" style="margin-top:14px;">
+      Reports 2237, 2240, 2241 are copies of the Repair Receipt template (UUID: 73c7b165). This is a Studio pattern where copying a report creates a new template with a <span class="mono">_copy_N</span> suffix. The Customer Letter, Final Notice, and Scrappage reports share the same base template structure. A separate window action "Customer Letter Report" (id: 2239) and menu item exist for the Customer Letter report.
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 9: MENUS -->
+<div class="section" id="menus">
+  <div class="section-header"><h2>9 · Menu Items</h2><span class="badge">16+ entries</span></div>
+  <div class="section-body">
+    <div class="subsection">
+      <h3>Window Actions (studio_customization)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Model</th><th>View Modes</th></tr></thead>
+          <tbody>
+            <tr><td>2312</td><td>Repair Job Details</td><td class="mono">helpdesk.ticket</td><td>kanban, tree, form, pivot, graph, activity</td></tr>
+            <tr><td>2234</td><td>Repair Job Details for the Period - RUG Only</td><td class="mono">helpdesk.ticket</td><td>kanban, tree, form, pivot, graph, activity</td></tr>
+            <tr><td>2239</td><td>Customer Letter Report</td><td class="mono">helpdesk.team</td><td>kanban, tree, form</td></tr>
+            <tr><td>2876</td><td>Helpdesk Team (helpdesk.team)</td><td class="mono">helpdesk.team</td><td>kanban, tree, form</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection" style="margin-top:16px;">
+      <h3>Menu Item Groups (from ir_model_data names)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Group</th><th>Menu Entries (ir_model_data names)</th></tr></thead>
+          <tbody>
+            <tr><td>Repair Jobs</td><td class="mono">helpdesk_repair_*, helpdesk_repair_job_details_menu, helpdesk_repair_job_details_rug</td></tr>
+            <tr><td>Symptoms</td><td class="mono">helpdesk_symptom_*, helpdesk_symptom_menu</td></tr>
+            <tr><td>Diagnosis</td><td class="mono">helpdesk_diagnosis_*, helpdesk_diagnosis_menu</td></tr>
+            <tr><td>Conditions</td><td class="mono">helpdesk_conditions_*, helpdesk_conditions_menu</td></tr>
+            <tr><td>Resolutions</td><td class="mono">helpdesk_resolutions_*, helpdesk_resolutions_menu</td></tr>
+            <tr><td>Customer Letters</td><td class="mono">helpdesk_customer_le_*</td></tr>
+            <tr><td>Projects (parent)</td><td>Helpdesk Team (helpdesk.team) — under Projects menu, sequence 6</td></tr>
+            <tr><td>Test (QA)</td><td class="mono">test_app_05_helpdesk_*</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SECTION 10: OBSERVATIONS -->
+<div class="section" id="observations">
+  <div class="section-header"><h2>10 · Observations &amp; Notes for Module Export</h2></div>
+  <div class="section-body">
+
+    <div class="subsection">
+      <h3>Strengths</h3>
+      <ul style="margin-left:20px;line-height:2.2;">
+        <li>The repair workflow is <strong>fully self-contained</strong> within the Helpdesk module — no custom module required for core logic.</li>
+        <li><strong>Computed field auto-stage advancement</strong> is a clean pattern; it avoids manual stage manipulation by users.</li>
+        <li><strong>Non-clickable statusbar</strong> enforces process integrity — users cannot skip stages.</li>
+        <li><strong>Repair type classification via ticket.type flags</strong> (RUG / normal-with-SN / normal-without-SN) is elegantly extensible — adding a new type only requires setting flags on the ticket type record.</li>
+        <li><strong>Multi-company support</strong> on helpdesk.stage via x_studio_company_id.</li>
+      </ul>
+    </div>
+
+    <div class="subsection" style="margin-top:16px;">
+      <h3>Issues &amp; Technical Debt</h3>
+      <div class="callout danger">
+        <strong>Duplicate / legacy fields:</strong>
+        <ul style="margin-left:20px;margin-top:6px;line-height:1.8;">
+          <li><span class="mono">x_studio_serial_number</span> (Serial Number-11) and <span class="mono">x_studio_serial_no</span> (Serial Number) both exist — two separate serial fields on the same model. The form view removes the first field (replace with no replacement) after layering in the second, suggesting <span class="mono">x_studio_serial_number</span> is vestigial.</li>
+          <li><span class="mono">x_studio_source_location</span> / <span class="mono">x_studio_source_location_1</span> and <span class="mono">x_studio_virtual_location</span> / <span class="mono">x_studio_virtual_location_1</span> — duplicate related fields pointing to slightly different user chains.</li>
+          <li>10 pairs of <span class="mono">x_studio_created_by_N / x_studio_created_on_N</span> is a brittle pattern — a proper audit log would use a one2many child model.</li>
+        </ul>
+      </div>
+      <div class="callout warn" style="margin-top:12px;">
+        <strong>Inactive automation rules with multiple versions:</strong> Four versions of "RR - Auto Select Product for RUG Repairs" exist (ids 172, 173, 243, 175). Only two are active. When exporting to a module, only the active rules should be included; the others should be cleaned up.
+      </div>
+      <div class="callout warn" style="margin-top:12px;">
+        <strong>Commented-out button XML:</strong> The form-button view contains several large commented-out &lt;!--xpath--&gt; blocks representing previous iterations of button logic. These should be removed before module export — they are dead code that increases view load time.
+      </div>
+      <div class="callout warn" style="margin-top:12px;">
+        <strong>Test / exploratory fields:</strong> <span class="mono">x_studio_cccc</span>, <span class="mono">x_studio_cccc3</span>, <span class="mono">x_studio_related_field_FNjnC</span>, <span class="mono">x_studio_related_field_MiNdm</span>, <span class="mono">x_studio_related_field_QuqN1</span> appear to be Studio experiments. The "Slowness - Test" automation rule (inactive) is a debugging artefact. These should be removed.
+      </div>
+      <div class="callout warn" style="margin-top:12px;">
+        <strong>Report templates are copies of copies:</strong> Customer Letter, Repair Final Notice, and Repair Final Notice - Scrappage are <span class="mono">_copy_N</span> chains from the Repair Receipt template (UUID 73c7b165). The actual QWeb template XML should be reviewed to confirm each report has been properly customized — sometimes Studio copies retain the parent's content.
+      </div>
+    </div>
+
+    <div class="subsection" style="margin-top:16px;">
+      <h3>Pre-export Checklist</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Item</th><th>Action</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Remove x_studio_serial_number (Serial Number-11)</td><td>Confirm it is fully replaced by x_studio_serial_no, then delete field</td><td><span class="tag yellow">Review</span></td></tr>
+            <tr><td>Clean duplicate source/virtual location fields (_1 variants)</td><td>Determine which variant is used in active code and remove the other</td><td><span class="tag yellow">Review</span></td></tr>
+            <tr><td>Remove test fields (cccc, cccc3, related_field_*)</td><td>Verify not referenced in any active view/action then delete</td><td><span class="tag red">Todo</span></td></tr>
+            <tr><td>Remove inactive duplicate automation rules (173, 175, 240, 344, 252)</td><td>Archive or delete after confirming no live data depends on them</td><td><span class="tag red">Todo</span></td></tr>
+            <tr><td>Remove commented-out button XML from view 4013</td><td>Strip all &lt;!--xpath...--&gt; comment blocks from the button view</td><td><span class="tag red">Todo</span></td></tr>
+            <tr><td>Verify all 6 report QWeb templates have correct content</td><td>Print each report against a test ticket to confirm output</td><td><span class="tag yellow">Review</span></td></tr>
+            <tr><td>Define ir.sequence for repair.seq</td><td>Ensure the sequence used in RR - Repair Seq.No is exported with the module</td><td><span class="tag red">Todo</span></td></tr>
+            <tr><td>Define x_repair_reason_custom model</td><td>The repair reason many2many target is a custom model — must be included in module</td><td><span class="tag red">Todo</span></td></tr>
+            <tr><td>Replace Created By/On 1–10 with proper one2many audit model</td><td>Architectural improvement — Studio limitation workaround</td><td><span class="tag gray">Optional</span></td></tr>
+            <tr><td>Document stage IDs (3,4,7,8,9,10,11,12,13,22,28,29,30,31,32)</td><td>Hardcoded stage IDs in button visibility and computed fields must be handled in module as XML IDs</td><td><span class="tag red">Critical</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout danger" style="margin-top:14px;">
+        <strong>Critical — Hardcoded Stage IDs:</strong> The Cancel button visibility uses <span class="mono">stage_id in [3,4,7,8,9,10,11,12,13]</span> and computed fields advance to stages 9, 10, 11, 12, 13, 22, 28, 29, 30, 31, 32. These are database-level integer IDs — they will be different in any other Odoo instance. When exporting to a proper module, all stage references must be converted to <span class="mono">ref()</span> XML IDs.
+      </div>
+    </div>
+
+    <div class="subsection" style="margin-top:16px;">
+      <h3>Custom Model Dependency</h3>
+      <div class="callout info">
+        The field <span class="mono">x_studio_repair_reason</span> (many2many) points to model <span class="mono">x_repair_reason_custom</span> — a Studio-created custom model (not a helpdesk model itself). This model must be exported and included in the same module. Its fields and records (the master data list of repair reasons) should also be included as <span class="mono">noupdate="1"</span> data in the module.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  Generated from Odoo 15 database <strong>odoo</strong> on 2026-05-08 &nbsp;·&nbsp; studio_customization module &nbsp;·&nbsp; Helpdesk Module Deep Audit
+</div>
+
+</body>
+</html>
