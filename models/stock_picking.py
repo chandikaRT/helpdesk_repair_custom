@@ -9,3 +9,6 @@ class StockPicking(models.Model):
     x_studio_helpdesk_ticket_id = fields.Many2one(
         'helpdesk.ticket', string='Helpdesk Ticket Id', ondelete='set null')
     x_studio_factory_repair = fields.Boolean(string='Factory Repair')
+    x_studio_rug_repair = fields.Boolean(
+        related='x_studio_helpdesk_ticket_id.x_studio_rug_repair',
+        string='RUG Repair', store=False)

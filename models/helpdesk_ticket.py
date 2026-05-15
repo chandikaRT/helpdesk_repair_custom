@@ -332,7 +332,7 @@ class HelpdeskTicket(models.Model):
             if rec.x_studio_return_receipt_location:
                 loc = self.env['stock.location'].search([
                     ('id', '=', rec.x_studio_return_receipt_location.id),
-                    ('x_studio_users_stock_location', 'ilike', self._uid),
+                    ('x_studio_users_stock_location', '=', self._uid),
                     ('active', '=', True),
                 ], limit=1)
                 valid = not bool(loc)
@@ -499,3 +499,168 @@ class HelpdeskTicket(models.Model):
                     rec['stage_id'] = stage_id
                     rec['x_studio_stage_date'] = datetime.datetime.now()
             rec.x_studio_handed_over = valid
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Serial number auto-population
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    @api.onchange('user_id')
+    def _onchange_user_id_locations(self):
+        """Copy virtual/source locations from the assigned user to the ticket."""
+        for rec in self:
+            u = rec.user_id
+            if u:
+                rec.x_studio_virtual_location = u.x_studio_virtual_location
+                rec.x_studio_source_location = u.x_studio_source_location
+                rec.x_studio_virtual_location_1 = u.x_studio_virtual_location_1
+                rec.x_studio_source_location_1 = u.x_studio_source_location_1
+
+    def _sync_user_locations(self):
+        """Write virtual/source locations from the current user_id onto the ticket."""
+        u = self.user_id
+        super(HelpdeskTicket, self).write({
+            'x_studio_virtual_location': u.x_studio_virtual_location.id if u else False,
+            'x_studio_source_location': u.x_studio_source_location.id if u else False,
+            'x_studio_virtual_location_1': u.x_studio_virtual_location_1.id if u else False,
+            'x_studio_source_location_1': u.x_studio_source_location_1.id if u else False,
+        })
+
+    @api.onchange('ticket_type_id')
+    def _onchange_ticket_type_id(self):
+        """Copy repair-type flags from the selected ticket type to the ticket."""
+        for rec in self:
+            tt = rec.ticket_type_id
+            rec.x_studio_rug_repair = tt.x_studio_rug if tt else False
+            rec.x_studio_rug_confirmed = tt.x_studio_rug_confirmed if tt else False
+            rec.x_studio_normal_repair_with_serial_no = tt.x_studio_with_serial_no if tt else False
+            rec.x_studio_normal_repair_without_serial_no = tt.x_studio_without_serial_no if tt else False
+
+    def _sync_ticket_type_flags(self):
+        """Write repair-type flags from the current ticket_type_id to the ticket."""
+        tt = self.ticket_type_id
+        super(HelpdeskTicket, self).write({
+            'x_studio_rug_repair': tt.x_studio_rug if tt else False,
+            'x_studio_rug_confirmed': tt.x_studio_rug_confirmed if tt else False,
+            'x_studio_normal_repair_with_serial_no': tt.x_studio_with_serial_no if tt else False,
+            'x_studio_normal_repair_without_serial_no': tt.x_studio_without_serial_no if tt else False,
+        })
+
+    @api.onchange('x_studio_serial_no')
+    def _onchange_serial_no(self):
+        """Immediately set product/lot from serial for UI feedback before save."""
+        for rec in self:
+            if rec.x_studio_serial_no:
+                sn = rec.x_studio_serial_no
+                rec.product_id = sn.product_id
+                rec.lot_id = sn
+                cust_location = self.env['stock.location'].search(
+                    [('usage', '=', 'customer')], limit=1)
+                trans_line = self.env['stock.move.line'].search([
+                    ('product_id', '=', sn.product_id.id),
+                    ('lot_id', '=', sn.id),
+                    ('picking_code', '=', 'outgoing'),
+                    ('location_dest_id', '=', cust_location.id),
+                ], limit=1)
+                if trans_line:
+                    company_id = self.env.context.get(
+                        'allowed_company_ids', [self.env.user.company_id.id])[0]
+                    so = self.env['sale.order'].search([
+                        ('name', '=', trans_line.origin),
+                        ('company_id', '=', company_id),
+                    ], limit=1)
+                    if so:
+                        rec.sale_order_id = so
+                        rec.x_studio_picking_id = trans_line.picking_id
+                        rec.x_studio_pick_id = trans_line.picking_id.id
+                if rec.x_studio_normal_repair_without_serial_no:
+                    rec.sale_order_id = False
+            else:
+                if rec.x_studio_normal_repair_without_serial_no:
+                    rec.sale_order_id = False
+                    rec.x_studio_picking_id = False
+                    rec.x_studio_pick_id = 0
+                    rec.lot_id = False
+                else:
+                    rec.sale_order_id = False
+                    rec.x_studio_picking_id = False
+                    rec.x_studio_pick_id = 0
+                    rec.product_id = False
+                    rec.lot_id = False
+
+    def _sync_serial_fields(self):
+        """Mirror the Update Serial server action: populate product/lot/SO and set sn_updated."""
+        updates = {}
+        sn = self.x_studio_serial_no
+        if sn:
+            company_id = self.env.context.get(
+                'allowed_company_ids', [self.env.user.company_id.id])[0]
+            cust_location = self.env['stock.location'].search(
+                [('usage', '=', 'customer')], limit=1)
+            trans_line = self.env['stock.move.line'].search([
+                ('product_id', '=', sn.product_id.id),
+                ('lot_id', '=', sn.id),
+                ('picking_code', '=', 'outgoing'),
+                ('location_dest_id', '=', cust_location.id),
+            ], limit=1)
+            if trans_line:
+                so = self.env['sale.order'].search([
+                    ('name', '=', trans_line.origin),
+                    ('company_id', '=', company_id),
+                ], limit=1)
+                if so:
+                    updates['sale_order_id'] = so.id
+                    updates['x_studio_picking_id'] = trans_line.picking_id.id
+                    updates['x_studio_pick_id'] = trans_line.picking_id.id
+            updates['product_id'] = sn.product_id.id
+            updates['lot_id'] = sn.id
+            if self.x_studio_normal_repair_without_serial_no:
+                updates['sale_order_id'] = False
+        else:
+            if self.x_studio_normal_repair_without_serial_no:
+                updates = {
+                    'sale_order_id': False,
+                    'x_studio_picking_id': False,
+                    'x_studio_pick_id': 0,
+                    'lot_id': False,
+                }
+            else:
+                updates = {
+                    'sale_order_id': False,
+                    'x_studio_picking_id': False,
+                    'x_studio_pick_id': 0,
+                    'product_id': False,
+                    'lot_id': False,
+                }
+        updates['x_studio_sn_updated'] = True
+        # Call super to avoid re-entering our write override (x_studio_serial_no not in updates)
+        super(HelpdeskTicket, self).write(updates)
+
+    def write(self, vals):
+        result = super().write(vals)
+        if 'x_studio_serial_no' in vals:
+            for rec in self:
+                rec._sync_serial_fields()
+        if 'ticket_type_id' in vals:
+            for rec in self:
+                rec._sync_ticket_type_flags()
+        if 'user_id' in vals:
+            for rec in self:
+                rec._sync_user_locations()
+        return result
+
+    def assign_ticket_to_self(self):
+        self.ensure_one()
+        self.user_id = self.env.user
+        # Return a form reload action to avoid an OWL setLocalState crash.
+        # When user_id changes: the button becomes invisible and two fields flip
+        # to required simultaneously.  OWL tries to restore state on the now-
+        # destroyed button DOM node, hitting `undefined.classList`.  Reopening
+        # the form record forces a clean remount instead of an in-place patch.
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'helpdesk.ticket',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'views': [(False, 'form')],
+            'target': 'current',
+        }

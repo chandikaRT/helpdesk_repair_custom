@@ -1,10 +1,57 @@
 from . import models
 
 
+# Canonical repair pipeline stages: (xml_id_suffix, name, sequence, fold)
+STAGE_DATA = [
+    ('stage_new',                      'New',                          0,  False),
+    ('stage_sent_to_factory',          'Sent to Factory',              1,  False),
+    ('stage_received_at_factory',      'Received at Factory',          2,  False),
+    ('stage_diagnosis',                'Diagnosis',                    3,  False),
+    ('stage_estimation_sent',          'Estimation Sent to Customer',  4,  False),
+    ('stage_estimation_approved',      'Estimation Approval Received', 5,  False),
+    ('stage_advance_received',         'Advance Received',             6,  False),
+    ('stage_repair_started',           'Repair Started',               7,  False),
+    ('stage_repair_completed',         'Repair Completed',             8,  False),
+    ('stage_sent_to_sales_centre',     'Sent to Sales Centre',         9,  False),
+    ('stage_received_at_sales_centre', 'Received at Sales Centre',     10, True),
+    ('stage_handed_over',              'Handed Over to Customer',      11, True),
+    ('stage_cancelled',                'Cancelled',                    12, True),
+]
+
+
+def _ensure_stages(env):
+    """Register existing stages with module XML IDs, creating any that are missing."""
+    IrModelData = env['ir.model.data']
+    Stage = env['helpdesk.stage']
+    MODULE = 'helpdesk_repair_custom'
+
+    for suffix, name, sequence, fold in STAGE_DATA:
+        # Skip if this module already owns an XML ID for this stage
+        existing_imd = IrModelData.search([
+            ('module', '=', MODULE), ('name', '=', suffix), ('model', '=', 'helpdesk.stage'),
+        ], limit=1)
+        if existing_imd:
+            continue
+
+        # Find an existing stage by name (prefer one without an owner module)
+        stage = Stage.search([('name', '=', name)], limit=1)
+        if not stage:
+            stage = Stage.create({'name': name, 'sequence': sequence, 'fold': fold})
+
+        IrModelData.create({
+            'module': MODULE,
+            'model': 'helpdesk.stage',
+            'res_id': stage.id,
+            'name': suffix,
+            'noupdate': True,
+        })
+
+
 def post_init_hook(cr, registry):
-    """Deactivate old Studio-created automation rules superseded by this module."""
     from odoo import api, SUPERUSER_ID
     env = api.Environment(cr, SUPERUSER_ID, {})
+
+    _ensure_stages(env)
 
     # External IDs owned by our module — never touch these
     our_xmlids = {

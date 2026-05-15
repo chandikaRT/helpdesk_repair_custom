@@ -386,5 +386,16 @@ record['x_studio_sn_updated'] = True
 ]]></field>
         </record>
 
+        <!-- Confirm Draft Quotation (repair.order) -->
+        <record id="action_confirm_draft_quotation" model="ir.actions.server">
+            <field name="name">Confirm Draft Quotation</field>
+            <field name="model_id" ref="repair.model_repair_order"/>
+            <field name="binding_model_id" ref="repair.model_repair_order"/>
+            <field name="state">code</field>
+            <field name="code">
+record['x_studio_confirm_draft_quotation'] = True
+            </field>
+        </record>
+
     </data>
 </odoo>

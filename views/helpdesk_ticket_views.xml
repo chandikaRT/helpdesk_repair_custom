@@ -74,8 +74,8 @@
                     <field name="x_studio_return_receipt_location"
                            string="Return Receipt Location"
                            options="{&quot;no_create&quot;:true}"
-                           domain="[('x_studio_many2many_field_7kpUe','ilike',uid)]"
-                           attrs="{&quot;readonly&quot;: [&quot;|&quot;,&quot;|&quot;,&quot;|&quot;,[&quot;x_studio_rug_approved&quot;,&quot;=&quot;,True],[&quot;x_studio_rug_request_sent&quot;,&quot;=&quot;,True],[&quot;x_studio_valid_confirm_return&quot;,&quot;=&quot;,True],[&quot;x_studio_repair_serial_created&quot;,&quot;=&quot;,True]], &quot;required&quot;: [[&quot;user_id&quot;,&quot;!=&quot;,False]]}"/>
+                           domain="[('x_studio_many2many_field_7kpUe','=',uid)]"
+                           attrs="{&quot;readonly&quot;: [&quot;|&quot;,&quot;|&quot;,&quot;|&quot;,[&quot;x_studio_rug_approved&quot;,&quot;=&quot;,True],[&quot;x_studio_rug_request_sent&quot;,&quot;=&quot;,True],[&quot;x_studio_valid_confirm_return&quot;,&quot;=&quot;,True],[&quot;x_studio_repair_serial_created&quot;,&quot;=&quot;,True]], &quot;required&quot;: [[&quot;x_studio_valid_confirm_return&quot;,&quot;=&quot;,True]]}"/>
                     <field name="x_studio_repair_location" string="Repair Location"
                            force_save="True" attrs="{}" readonly="1"/>
                     <field name="x_studio_job_location" string="Job Location"
@@ -144,9 +144,13 @@
                     <field name="x_studio_tracking" string="Tracking"/>
                     <field name="x_studio_repair_serial_created" invisible="1"/>
                     <field name="x_studio_sn_updated" invisible="1"/>
-                    <field name="x_studio_source_location"/>
+                    <field name="x_studio_source_location"
+                           attrs="{&quot;invisible&quot;: [[&quot;company_id&quot;,&quot;!=&quot;,1]]}"/>
+                    <field name="x_studio_source_location_1"
+                           attrs="{&quot;invisible&quot;: [[&quot;company_id&quot;,&quot;!=&quot;,2]]}"/>
                     <field name="x_studio_virtual_location" invisible="1"/>
                     <field name="x_studio_virtual_location_id" invisible="1"/>
+                    <field name="x_studio_virtual_location_1" invisible="1"/>
                     <field name="x_studio_valid_return" force_save="True"
                            attrs="{}" readonly="1" invisible="1"/>
                     <field name="x_studio_pick_id" invisible="1"/>
@@ -241,7 +245,7 @@
                            attrs="{}" readonly="1" invisible="1"/>
                     <field name="x_studio_sale_order" force_save="True"
                            attrs="{}" readonly="1" invisible="1"/>
-                    <field name="x_studio_items" widget="many2many_tags" invisible="1"/>
+                    <field name="x_studio_items" widget="many2many_tags" string="Items"/>
                     <field name="x_studio_quick_repair_status" string="Tested OK"
                            force_save="True" attrs="{}" readonly="1" invisible="1"/>
                     <field name="x_studio_qty" invisible="1"/>
@@ -249,6 +253,8 @@
                     <field name="x_studio_cancelled_2" force_save="True"
                            attrs="{}" readonly="1" invisible="1"/>
                     <field name="x_studio_fsm_task_done" attrs="{}" invisible="1"/>
+                    <field name="x_studio_user_location_validation" force_save="True"
+                           attrs="{}" readonly="1" invisible="1"/>
                 </xpath>
 
                 <!-- Delivery details in the delivery group of the first (Ticket) notebook page -->
@@ -297,7 +303,96 @@
                     </page>
                 </xpath>
 
+                <!-- Repair Status page (invisible, matches Studio) -->
+                <xpath expr="//notebook[2]" position="inside">
+                    <page string="Repair Status" name="studio_page_N4kvO" attrs="{}" invisible="1">
+                        <group name="studio_group_N4kvO">
+                            <group name="studio_group_N4kvO_left" string="Status Log">
+                                <field name="create_uid"/>
+                                <field name="create_date"/>
+                                <field name="x_studio_created_by_1" string="Created By 1"/>
+                                <field name="x_studio_created_on_1" string="Created On 1"/>
+                                <field name="x_studio_created_by_2" string="Created By 2"/>
+                                <field name="x_studio_created_on_2" string="Created On 2"/>
+                                <field name="x_studio_created_by_3" string="Created By 3"/>
+                                <field name="x_studio_created_on_3" string="Created On 3"/>
+                                <field name="x_studio_created_by_4" string="Created By 4"/>
+                                <field name="x_studio_created_on_4" string="Created On 4"/>
+                            </group>
+                            <group name="studio_group_N4kvO_right" string="Status Log">
+                                <field name="x_studio_created_by_5" string="Created By 5"/>
+                                <field name="x_studio_created_on_5" string="Created On 5"/>
+                                <field name="x_studio_created_by_6" string="Created By 6"/>
+                                <field name="x_studio_created_on_6" string="Created On 6"/>
+                                <field name="x_studio_created_by_7" string="Created By 7"/>
+                                <field name="x_studio_created_on_7" string="Created On 7"/>
+                                <field name="x_studio_created_by_8" string="Created By 8"/>
+                                <field name="x_studio_created_on_8" string="Created On 8"/>
+                                <field name="x_studio_created_by_9" string="Created By 9"/>
+                                <field name="x_studio_created_on_9" string="Created On 9"/>
+                                <field name="x_studio_created_by_10" string="Created By 10"/>
+                                <field name="x_studio_created_on_10" string="Created On 10"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+
             </data>
+        </field>
+    </record>
+
+    <!-- ── Kanban view customizations (Studio) ── -->
+    <record id="helpdesk_ticket_view_kanban_studio" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.view.kanban.studio</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="inherit_id" ref="helpdesk.helpdesk_ticket_view_kanban"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='ticket_type_id']" position="after">
+                <field name="x_studio_quick_repair_status" display="full"
+                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_quick_repair_status&quot;,&quot;!=&quot;,&quot;Quick Repair&quot;]]}"/>
+                <field name="x_studio_rug_confirmed" display="full" attrs="{}" invisible="1"/>
+                <field name="x_studio_rug_approval_status" display="full"
+                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_rug_confirmed&quot;,&quot;!=&quot;,True]]}"/>
+                <field name="x_studio_material_availability" display="full"/>
+            </xpath>
+            <xpath expr="//kanban[1]/templates[1]/t[1]/div[1]/div[2]/div[4]/field[@name='tag_ids']" position="after">
+                <field name="create_date" display="full"/>
+                <field name="x_studio_cancel_status" display="full"
+                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_cancel_status&quot;,&quot;=&quot;,&quot;None&quot;]]}"/>
+                <field name="x_studio_cancelled_date" display="full"
+                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_cancel_status&quot;,&quot;=&quot;,&quot;None&quot;]]}"/>
+                <field name="x_studio_reopen_status" display="full"
+                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_reopen_status&quot;,&quot;=&quot;,&quot;None&quot;]]}"/>
+                <field name="x_studio_reopened_date" display="full"
+                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_reopen_status&quot;,&quot;=&quot;,&quot;None&quot;]]}"/>
+                <field name="x_studio_stage_date" display="full"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Tree view customizations (Studio) ── -->
+    <record id="helpdesk_ticket_view_tree_studio" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.view.tree.studio</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="inherit_id" ref="helpdesk.helpdesk_tickets_view_tree"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="replace"/>
+            <xpath expr="//tree[1]/field[@name='team_id']" position="replace">
+                <field name="partner_name" optional="show"/>
+                <field name="create_date" optional="show" widget="date"/>
+                <field optional="show" name="x_studio_materials_used" string="Materials Used "/>
+                <field optional="show" name="x_studio_quantity" string="Quantity"/>
+                <field optional="show" name="x_studio_unit_price" string="Unit Price"/>
+                <field name="x_studio_items" optional="show" widget="many2many_tags"/>
+                <field name="x_studio_qty" optional="show"/>
+                <field name="x_studio_sales_price" optional="show"/>
+                <field name="close_date" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='sla_deadline']" position="after">
+                <field name="x_studio_repair_reason" optional="show" widget="many2many_tags"/>
+            </xpath>
         </field>
     </record>
 
@@ -336,7 +431,7 @@
                     <button type="action" name="%(helpdesk_repair_custom.action_change_type_to_rug)d"
                             string="Change Repair Type To RUG" class="btn-primary"
                             confirm="Are you sure you want to change the repair type to RUG?"
-                            attrs="{'invisible': ['|','|','|',('x_studio_cancelled', '=', True),('x_studio_normal_repair_with_serial_no', '=', False),('x_studio_valid_return', '=', False),('x_studio_estimation_approved_stage_updated', '=', True)]}"/>
+                            attrs="{'invisible': ['|','|','|',('x_studio_cancelled', '=', True),'&amp;',('x_studio_normal_repair_with_serial_no', '=', False),'|',('x_studio_rug_repair', '=', False),('x_studio_rug_confirmed', '=', True),'&amp;',('x_studio_normal_repair_with_serial_no', '=', True),('x_studio_valid_return', '=', False),('x_studio_estimation_approved_stage_updated', '=', True)]}"/>
                 </xpath>
 
                 <!-- Send to Factory button (before FSM task button) -->
@@ -401,7 +496,7 @@
                 <xpath expr="//button[@name='%(stock.act_stock_return_picking)d']" position="before">
                     <button type="action" name="%(helpdesk_repair_custom.action_update_serial)d"
                             string="Update Serial" class="btn-primary"
-                            attrs="{'invisible': ['|','|','|',('x_studio_normal_repair_without_serial_no', '=', True),('x_studio_serial_no', '=', False),'&amp;',('x_studio_normal_repair_with_serial_no', '=', True),('x_studio_sn_updated', '=', True),'&amp;',('x_studio_rug_repair', '=', True),('x_studio_sn_updated', '=', True)]}"/>
+                            attrs="{'invisible': ['|','|','|',('x_studio_rug_repair', '=', False),('x_studio_rug_confirmed', '=', True),('x_studio_serial_no', '=', False),('x_studio_sn_updated', '=', True)]}"/>
                 </xpath>
 
                 <!-- Receipt (first, for RUG / normal with serial) -->

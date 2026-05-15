@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── repair.order form: add confirm_draft_quotation field after tag_ids (Studio) ── -->
+    <record id="repair_order_view_form_studio" model="ir.ui.view">
+        <field name="name">repair.order.form.studio</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_form"/>
+        <field name="priority">99</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tag_ids']" position="after">
+                <field name="x_studio_confirm_draft_quotation" string="Confirm Draft Quotation"
+                       force_save="True" attrs="{}" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── repair.order button customizations (Studio, priority 50000) ── -->
+    <record id="repair_order_view_form_studio_buttons" model="ir.ui.view">
+        <field name="name">repair.order.form.studio.buttons</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_form"/>
+        <field name="priority">50000</field>
+        <field name="arch" type="xml">
+            <data>
+
+                <!-- Confirm Draft Quotation button (before Validate) -->
+                <xpath expr="//header/button[@name='action_validate']" position="before">
+                    <button type="action"
+                            name="%(helpdesk_repair_custom.action_confirm_draft_quotation)d"
+                            string="Confirm Draft Quotation" class="btn-primary"
+                            attrs="{'invisible': [('x_studio_confirm_draft_quotation', '=', True)]}"/>
+                </xpath>
+
+                <!-- Validate: hide until quotation confirmed -->
+                <xpath expr="//header/button[@name='action_validate']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|',('x_studio_confirm_draft_quotation', '=', False)]}</attribute>
+                </xpath>
+
+                <!-- Send by Email: hide until quotation confirmed -->
+                <xpath expr="//header/button[@name='action_send_mail']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|',('x_studio_confirm_draft_quotation', '=', False)]}</attribute>
+                </xpath>
+
+                <!-- Print: hide until quotation confirmed -->
+                <xpath expr="//header/button[@name='print_repair_order']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|',('x_studio_confirm_draft_quotation', '=', False)]}</attribute>
+                </xpath>
+
+                <!-- Cancel (second): modified visibility -->
+                <xpath expr="//header/button[@name='action_repair_cancel'][2]" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|','|',('x_studio_confirm_draft_quotation', '=', False),('state', '=', 'cancel'),('invoice_state', '=', 'draft')]}</attribute>
+                </xpath>
+
+            </data>
+        </field>
+    </record>
+
+</odoo>

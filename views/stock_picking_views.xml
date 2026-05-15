@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="stock_picking_form_rug_validate" model="ir.ui.view">
+        <field name="name">stock.picking.form.rug.validate</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <!--
+                The Studio view (priority 99) hides button_validate for repair deliveries when
+                x_studio_repair_payment_made = False (i.e. no payment or RUG approval yet).
+                For RUG-type repair flows, the invoice is raised after delivery, so validate must
+                remain available even when repair_payment_made = False.
+
+                This view (priority 100) mirrors the Studio attrs exactly, but adds a third
+                AND clause to the repair-payment condition: x_studio_rug_repair = False.
+                Result: the payment-gate only blocks non-RUG repair deliveries.
+
+                Invisible when ANY of these is true:
+                  1. x_studio_cancelled = True
+                  2. x_studio_valid_transfer_lines = False
+                  3. x_studio_transfer_rejected = True
+                  4. state in (waiting, confirmed)
+                  5. show_validate = False
+                  6. quotation_type_2 = Repair AND repair_payment_made = False AND NOT rug_repair
+                  7. pr_type = Import AND update_consignment = False
+                  8. quotation_type_2 = Project AND budget_created = False
+            -->
+            <xpath expr="//button[@name='button_validate']" position="before">
+                <field name="x_studio_cancelled" invisible="1"/>
+                <field name="x_studio_valid_transfer_lines" invisible="1"/>
+                <field name="x_studio_transfer_rejected" invisible="1"/>
+                <field name="x_studio_quotation_type_2" invisible="1"/>
+                <field name="x_studio_repair_payment_made" invisible="1"/>
+                <field name="x_studio_pr_type" invisible="1"/>
+                <field name="x_studio_update_consignment" invisible="1"/>
+                <field name="x_studio_budget_created" invisible="1"/>
+                <field name="x_studio_helpdesk_ticket_id" invisible="1"/>
+                <field name="x_studio_rug_repair" invisible="1"/>
+            </xpath>
+            <xpath expr="//button[@name='button_validate']" position="attributes">
+                <attribute name="attrs">{'invisible': ['|','|','|','|','|','|','|',('x_studio_cancelled','=',True),('x_studio_valid_transfer_lines','=',False),('x_studio_transfer_rejected','=',True),('state','in',['waiting','confirmed']),('show_validate','=',False),'&amp;','&amp;',('x_studio_quotation_type_2','=','Repair'),('x_studio_repair_payment_made','=',False),('x_studio_rug_repair','=',False),'&amp;',('x_studio_pr_type','=','Import'),('x_studio_update_consignment','=',False),'&amp;',('x_studio_quotation_type_2','=','Project'),('x_studio_budget_created','=',False)]}</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
