@@ -18,6 +18,13 @@ class ProjectTask(models.Model):
     ], string='Material Availability')
     x_studio_dispatch_done = fields.Boolean(string='Dispatch Done', store=True)
 
+    x_studio_repair_image_01 = fields.Binary(string='Repair Image 01', attachment=True)
+    x_studio_repair_image_02 = fields.Binary(string='Repair Image 02', attachment=True)
+    x_studio_warranty_card = fields.Binary(string='Warranty Card', attachment=True)
+    x_studio_related_information = fields.Binary(string='Related Information', attachment=True)
+    x_studio_diagnosis_ids = fields.One2many(
+        'x_task_diagnosis', 'x_studio_task_id', string='Diagnosis')
+
     x_studio_so_fully_paid = fields.Boolean(
         string='SO Fully Paid', compute='_compute_x_studio_so_fully_paid', store=False)
 

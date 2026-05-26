@@ -1,3 +1,4 @@
+from . import task_diagnosis
 from . import account_payment
 from . import repair_accounts
 from . import sale_order

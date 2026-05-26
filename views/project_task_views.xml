@@ -1,3 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <record id="view_task_form_repair_tabs" model="ir.ui.view">
+        <field name="name">project.task.form.inherit.repair.tabs</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <!-- helpdesk_ticket_id needed for Repair Diagnosis tab visibility -->
+            <xpath expr="//sheet" position="inside">
+                <field name="helpdesk_ticket_id" invisible="1"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Repair Image" name="studio_page_VxXz6">
+                    <group>
+                        <group>
+                            <field widget="image" name="x_studio_repair_image_01"
+                                   string="Repair Image 01" options='{"size": [0, 270]}'/>
+                        </group>
+                        <group>
+                            <field widget="image" name="x_studio_repair_image_02"
+                                   string="Repair Image 02" options='{"size": [0, 270]}'/>
+                        </group>
+                    </group>
+                </page>
+                <page string="Warranty Details" name="studio_page_q4maT">
+                    <group>
+                        <group>
+                            <field name="x_studio_warranty_card" widget="image"
+                                   string="Warranty Card" options='{"size": [0, 270]}'/>
+                        </group>
+                        <group>
+                            <field name="x_studio_related_information" widget="image"
+                                   string="Related Information" options='{"size": [0, 270]}'/>
+                        </group>
+                    </group>
+                </page>
+                <page string="Repair Diagnosis" name="studio_page_M5qFQ"
+                      attrs="{'invisible': [['helpdesk_ticket_id', '=', False]]}">
+                    <field name="x_studio_diagnosis_ids" force_save="True">
+                        <tree editable="bottom">
+                            <field name="x_studio_sequence" widget="handle"/>
+                            <field name="x_name" invisible="1"/>
+                            <field name="x_studio_condition" optional="show" invisible="1"/>
+                            <field name="x_studio_symptom_area" optional="show" invisible="1"/>
+                            <field name="x_studio_symptom_code" optional="show" invisible="1"/>
+                            <field name="x_studio_description" optional="show"/>
+                            <field name="x_studio_diagnosis_area" optional="show" required="1"/>
+                            <field name="x_studio_diagnosis_code" optional="show" required="1"
+                                   domain="[['x_studio_diagnosis_area_1', '=', x_studio_diagnosis_area]]"/>
+                            <field name="x_studio_reason" optional="show" required="1"/>
+                            <field name="x_studio_sub_reason" optional="show" required="1"
+                                   domain="[['x_studio_reason_code', '=', x_studio_reason]]"/>
+                            <field name="x_studio_resolution" optional="show" required="1"/>
+                            <field name="x_studio_repair_stage" optional="show" required="1"/>
+                            <field name="x_studio_task_id" string="Task" optional="show" invisible="1"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>
