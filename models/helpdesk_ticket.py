@@ -286,7 +286,7 @@ class HelpdeskTicket(models.Model):
         for rec in self:
             task_status = False
             for line in rec.fsm_task_ids:
-                if line.fsm_done or line.x_studio_end_quick_repair:
+                if line.fsm_done:
                     task_status = True
             rec.x_studio_fsm_task_done = task_status
 
@@ -363,7 +363,7 @@ class HelpdeskTicket(models.Model):
         for rec in self:
             task_status = False
             for line in rec.fsm_task_ids:
-                if line.fsm_done or line.x_studio_end_quick_repair:
+                if line.fsm_done:
                     task_status = True
             if not task_status and rec.x_studio_sale_order:
                 so = rec.x_studio_sale_order
@@ -541,23 +541,29 @@ class HelpdeskTicket(models.Model):
             if not (tt and tt.x_studio_without_serial_no):
                 rec.product_id = False
 
-    def _sync_ticket_type_flags(self):
-        """Write repair-type flags from the current ticket_type_id; clear prior serial/product selection."""
+    def _sync_ticket_type_flags(self, skip_clear=False):
+        """Write repair-type flags from the current ticket_type_id; clear prior serial/product selection.
+
+        skip_clear=True when serial is being set in the same write() call — avoids wiping
+        a serial that was explicitly saved at the same time as the ticket type.
+        """
         tt = self.ticket_type_id
         updates = {
             'x_studio_rug_repair': tt.x_studio_rug if tt else False,
             'x_studio_rug_confirmed': tt.x_studio_rug_confirmed if tt else False,
             'x_studio_normal_repair_with_serial_no': tt.x_studio_with_serial_no if tt else False,
             'x_studio_normal_repair_without_serial_no': tt.x_studio_without_serial_no if tt else False,
-            'sale_order_id': False,
-            'x_studio_picking_id': False,
-            'x_studio_pick_id': 0,
-            'lot_id': False,
-            'x_studio_serial_no': False,
         }
-        # For "Without Serial No" type, product is manually selected — don't clear it
-        if not (tt and tt.x_studio_without_serial_no):
-            updates['product_id'] = False
+        if not skip_clear:
+            updates.update({
+                'sale_order_id': False,
+                'x_studio_picking_id': False,
+                'x_studio_pick_id': 0,
+                'lot_id': False,
+                'x_studio_serial_no': False,
+            })
+            if not (tt and tt.x_studio_without_serial_no):
+                updates['product_id'] = False
         super(HelpdeskTicket, self).write(updates)
 
     @api.onchange('x_studio_serial_no')
@@ -656,8 +662,9 @@ class HelpdeskTicket(models.Model):
             for rec in self:
                 rec._sync_serial_fields()
         if 'ticket_type_id' in vals:
+            serial_also_set = bool(vals.get('x_studio_serial_no'))
             for rec in self:
-                rec._sync_ticket_type_flags()
+                rec._sync_ticket_type_flags(skip_clear=serial_also_set)
         if 'user_id' in vals:
             for rec in self:
                 rec._sync_user_locations()

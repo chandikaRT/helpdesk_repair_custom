@@ -13,6 +13,7 @@
             </xpath>
             <!-- Validate Diagnosis header button -->
             <xpath expr="//header" position="inside">
+                <field name="x_studio_end_quick_repair" invisible="1"/>
                 <button name="action_validate_diagnosis"
                         string="Validate Diagnosis"
                         type="object"
@@ -20,6 +21,14 @@
                         attrs="{'invisible': ['|',
                                 ('x_studio_diagnosis_validated', '=', True),
                                 ('helpdesk_ticket_id', '=', False)]}"/>
+                <button name="action_tested_ok"
+                        string="Tested OK"
+                        type="object"
+                        class="btn-primary"
+                        attrs="{'invisible': ['|','|',
+                            ('material_line_product_count', '&gt;', 0),
+                            ('helpdesk_ticket_id', '=', False),
+                            ('x_studio_end_quick_repair', '=', True)]}"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Repair Image" name="studio_page_VxXz6">

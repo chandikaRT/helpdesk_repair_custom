@@ -44,6 +44,12 @@ class StockPicking(models.Model):
     x_studio_dispatch_done = fields.Boolean(
         compute='_compute_x_studio_picking_dispatch_gate', store=False,
         string='Dispatch Done')
+    x_studio_ticket_received_at_sales = fields.Boolean(
+        compute='_compute_x_studio_picking_dispatch_gate', store=False,
+        string='Ticket Received at Sales Centre')
+    x_studio_ticket_factory_repair = fields.Boolean(
+        compute='_compute_x_studio_picking_dispatch_gate', store=False,
+        string='Ticket is Factory Repair')
 
     @api.depends('location_id', 'location_id.usage')
     def _compute_x_studio_location_is_customer(self):
@@ -52,16 +58,27 @@ class StockPicking(models.Model):
 
     @api.depends(
         'x_studio_helpdesk_ticket_id',
+        'x_studio_helpdesk_ticket_id.stage_id',
+        'x_studio_helpdesk_ticket_id.stage_id.name',
+        'x_studio_helpdesk_ticket_id.x_studio_job_location',
         'x_studio_helpdesk_ticket_id.fsm_task_ids',
         'x_studio_helpdesk_ticket_id.fsm_task_ids.x_studio_so_fully_paid',
         'x_studio_helpdesk_ticket_id.fsm_task_ids.x_studio_dispatch_done',
+        'x_studio_helpdesk_ticket_id.fsm_task_ids.x_studio_end_quick_repair',
     )
     def _compute_x_studio_picking_dispatch_gate(self):
         for picking in self:
             ticket = picking.x_studio_helpdesk_ticket_id
             tasks = ticket.fsm_task_ids if ticket else self.env['project.task']
-            picking.x_studio_so_fully_paid = any(t.x_studio_so_fully_paid for t in tasks)
+            picking.x_studio_so_fully_paid = any(
+                t.x_studio_so_fully_paid or t.x_studio_end_quick_repair for t in tasks)
             picking.x_studio_dispatch_done = any(t.x_studio_dispatch_done for t in tasks)
+            picking.x_studio_ticket_received_at_sales = bool(
+                ticket and ticket.stage_id.name == 'Received at Sales Centre'
+            )
+            picking.x_studio_ticket_factory_repair = bool(
+                ticket and ticket.x_studio_job_location == 'Factory Repair'
+            )
 
     x_studio_valid_transfer_lines = fields.Boolean(
         string='Valid Transfer Lines',

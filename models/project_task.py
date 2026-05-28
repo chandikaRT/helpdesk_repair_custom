@@ -6,6 +6,10 @@ class ProjectTask(models.Model):
     _inherit = 'project.task'
 
     x_studio_end_quick_repair = fields.Boolean(string='End Quick Repair')
+    x_studio_quick_repair_status_1 = fields.Selection([
+        ('None', 'None'),
+        ('Quick Repair', 'Tested OK'),
+    ], string='Quick Repair Status')
     x_studio_fully_invoiced_so = fields.Boolean(string='Fully Invoiced SO',
         compute='_compute_x_studio_fully_invoiced_so', store=False)
     x_studio_valid_invoiced_so = fields.Boolean(string='Valid Invoiced SO')
@@ -38,17 +42,24 @@ class ProjectTask(models.Model):
                 rec.sale_order_id and rec.sale_order_id.invoice_status == 'invoiced'
             )
 
-    @api.depends('sale_order_id', 'sale_order_id.invoice_ids.state', 'sale_order_id.invoice_ids.payment_state')
+    @api.depends(
+        'sale_order_id', 'sale_order_id.state', 'sale_order_id.amount_total',
+        'sale_order_id.invoice_ids.state', 'sale_order_id.invoice_ids.move_type',
+        'sale_order_id.invoice_ids.amount_total', 'sale_order_id.invoice_ids.amount_residual',
+    )
     def _compute_x_studio_so_fully_paid(self):
         for task in self:
             so = task.sale_order_id
             if not so:
                 task.x_studio_so_fully_paid = False
                 continue
+            if so.state == 'cancel':
+                task.x_studio_so_fully_paid = True
+                continue
             invoices = so.invoice_ids.filtered(
                 lambda i: i.state == 'posted' and i.move_type == 'out_invoice')
-            task.x_studio_so_fully_paid = bool(invoices) and all(
-                i.payment_state == 'paid' for i in invoices)
+            total_paid = sum(i.amount_total - i.amount_residual for i in invoices)
+            task.x_studio_so_fully_paid = bool(invoices) and total_paid >= so.amount_total - 0.01
 
     def action_validate_diagnosis(self):
         self.ensure_one()
@@ -63,24 +74,43 @@ class ProjectTask(models.Model):
                 + "\n".join(missing))
         self.x_studio_diagnosis_validated = True
 
+    def action_tested_ok(self):
+        self.ensure_one()
+        self.write({
+            'x_studio_end_quick_repair': True,
+            'x_studio_quick_repair_status_1': 'Quick Repair',
+        })
+        ticket = self.helpdesk_ticket_id
+        if ticket:
+            stage_id = ticket._get_stage_by_name('Repair Completed')
+            if stage_id:
+                ticket.write({
+                    'stage_id': stage_id,
+                    'x_studio_stage_date': fields.Datetime.now(),
+                    'x_studio_repair_complete_stage_updated': True,
+                    'x_studio_quick_repair_status': 'Quick Repair',
+                })
+
     @api.depends(
         'fsm_done', 'is_fsm', 'timer_start',
         'display_enabled_conditions_count', 'display_satisfied_conditions_count',
-        'sale_order_id', 'sale_order_id.picking_ids', 'sale_order_id.picking_ids.state',
-        'helpdesk_ticket_id',
+        'sale_order_id', 'sale_order_id.state',
+        'sale_order_id.picking_ids', 'sale_order_id.picking_ids.state',
+        'helpdesk_ticket_id', 'x_studio_end_quick_repair',
     )
     def _compute_mark_as_done_buttons(self):
         super()._compute_mark_as_done_buttons()
         for task in self:
+            if task.x_studio_end_quick_repair:
+                continue
             hide = False
             if task.sale_order_id:
                 so = task.sale_order_id
-                outgoing = so.picking_ids.filtered(lambda p: p.picking_type_code == 'outgoing')
-                if not outgoing or not all(p.state == 'done' for p in outgoing):
-                    hide = True
+                if so.state != 'cancel':
+                    outgoing = so.picking_ids.filtered(lambda p: p.picking_type_code == 'outgoing')
+                    if not outgoing or not all(p.state == 'done' for p in outgoing):
+                        hide = True
             elif task.helpdesk_ticket_id:
-                # Repair task with no SO yet — hide until materials are added
-                # and the SO+deliveries gate above takes over.
                 hide = True
             if hide:
                 task.update({
