@@ -32,6 +32,9 @@ class AccountMove(models.Model):
 
         rug_account_rec = self.env['x_repair_accounts'].search(
             [('x_studio_company_id', '=', company.id)], limit=1)
+        if not rug_account_rec:
+            rug_account_rec = self.env['x_repair_accounts'].search(
+                [('x_studio_company_id', '=', False)], limit=1)
         if not rug_account_rec or not rug_account_rec.x_studio_rug_account:
             raise UserError('RUG Account must be Specified in Repair Accounts')
 

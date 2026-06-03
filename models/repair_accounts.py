@@ -12,4 +12,6 @@ class RepairAccounts(models.Model):
     x_active = fields.Boolean(string='Active', default=True)
     x_studio_sequence = fields.Integer(string='Sequence')
     x_studio_rug_account = fields.Many2one('account.account', string='RUG Account')
-    x_studio_company_id = fields.Many2one('res.company', string='Company')
+    x_studio_company_id = fields.Many2one(
+        'res.company', string='Company',
+        default=lambda self: self.env.company)
