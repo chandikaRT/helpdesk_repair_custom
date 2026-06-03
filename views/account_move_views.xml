@@ -30,7 +30,19 @@
                        force_save="1"
                        invisible="1"/>
             </xpath>
-            <!-- Block "Register Payment" on RUG invoices until account is updated -->
+            <!-- Gap A: hide Confirm/Post button while RUG is confirmed-but-not-updated -->
+            <xpath expr="//header/button[@name='action_post'][2]" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', '|', '|',
+                    ('state', '!=', 'draft'),
+                    ('auto_post', '=', True),
+                    ('move_type', '=', 'entry'),
+                    ('display_inactive_currency_warning', '=', True),
+                    '&amp;', '&amp;',
+                    ('x_studio_rug_confirmed', '=', True),
+                    ('x_studio_rug_rejected', '=', False),
+                    ('x_studio_rug_acc_updated', '=', False)]}</attribute>
+            </xpath>
+            <!-- Gap B: hide Register Payment AFTER the RUG account update (matches prod) -->
             <xpath expr="//button[@name='action_register_payment']" position="attributes">
                 <attribute name="attrs">{'invisible': ['|', '|', '|',
                     ('state', '!=', 'posted'),
@@ -39,7 +51,23 @@
                         'in_invoice', 'in_refund', 'out_receipt', 'in_receipt')),
                     '&amp;',
                     ('x_studio_rug_confirmed', '=', True),
-                    ('x_studio_rug_acc_updated', '=', False)]}</attribute>
+                    ('x_studio_rug_acc_updated', '=', True)]}</attribute>
+            </xpath>
+            <!-- Gap C: read-only Journal Items tab for all users -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Journal Items" name="rug_journal_items">
+                    <field name="line_ids" readonly="1">
+                        <tree string="Journal Items" create="false" edit="false" delete="false"
+                              decoration-muted="display_type in ('line_section', 'line_note')">
+                            <field name="account_id"/>
+                            <field name="partner_id" optional="hide"/>
+                            <field name="name"/>
+                            <field name="debit" sum="Total Debit"/>
+                            <field name="credit" sum="Total Credit"/>
+                            <field name="display_type" invisible="1"/>
+                        </tree>
+                    </field>
+                </page>
             </xpath>
         </field>
     </record>
