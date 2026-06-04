@@ -44,8 +44,10 @@ class ProjectTask(models.Model):
 
     @api.depends(
         'sale_order_id', 'sale_order_id.state', 'sale_order_id.amount_total',
+        'sale_order_id.x_studio_rug_approved',
         'sale_order_id.invoice_ids.state', 'sale_order_id.invoice_ids.move_type',
         'sale_order_id.invoice_ids.amount_total', 'sale_order_id.invoice_ids.amount_residual',
+        'sale_order_id.invoice_ids.x_studio_rug_acc_updated',
     )
     def _compute_x_studio_so_fully_paid(self):
         for task in self:
@@ -55,6 +57,12 @@ class ProjectTask(models.Model):
                 continue
             if so.state == 'cancel':
                 task.x_studio_so_fully_paid = True
+                continue
+            if so.x_studio_rug_approved:
+                rug_invoices = so.invoice_ids.filtered(
+                    lambda i: i.state == 'posted' and i.move_type == 'out_invoice')
+                task.x_studio_so_fully_paid = bool(rug_invoices) and all(
+                    i.x_studio_rug_acc_updated for i in rug_invoices)
                 continue
             invoices = so.invoice_ids.filtered(
                 lambda i: i.state == 'posted' and i.move_type == 'out_invoice')
