@@ -112,7 +112,7 @@ if record.id:
           'location_id': update_prod_move.location_id.id,
           'location_dest_id': update_prod_move.location_dest_id.id,
           'lot_id': record.ticket_id.x_studio_serial_no.id,
-          'qty_done': 1.00,
+          'quantity': 1.00,
           'company_id': company.id,
         })
         update_ticket = env['helpdesk.ticket'].search([('id', '=', record.ticket_id.id), ('company_id', '=', company.id)], limit=1)
@@ -177,8 +177,8 @@ if record.id:
 
      update_prod_move = env['stock.picking'].search([('id', '=', prod_move.id),('company_id', '=', company.id)],limit=1)
      if update_prod_move:
-      stock_move = env['stock.move'].create({'picking_id':update_prod_move.id,'name':('New Move:'+record.product_id.name),'reference':update_prod_move.name,'picking_type_id':update_prod_move.picking_type_id.id,'product_id':record.product_id.id,'location_id':update_prod_move.location_id.id,'location_dest_id':update_prod_move.location_dest_id.id,'product_uom_qty':1.00,'product_uom':record.product_id.uom_id.id,'state':'done','company_id':company.id})
-      stock_move_line = env['stock.move.line'].create({'move_id':stock_move.id,'picking_id':update_prod_move.id,'picking_type_id':update_prod_move.picking_type_id.id,'product_id':record.product_id.id,'product_uom_id':record.product_id.uom_id.id,'location_id':update_prod_move.location_id.id,'location_dest_id':update_prod_move.location_dest_id.id,'qty_done':1.00,'company_id':company.id})
+      stock_move = env['stock.move'].create({'picking_id':update_prod_move.id,'name':('New Move:'+record.product_id.name),'reference':update_prod_move.name,'picking_type_id':update_prod_move.picking_type_id.id,'product_id':record.product_id.id,'location_id':update_prod_move.location_id.id,'location_dest_id':update_prod_move.location_dest_id.id,'product_uom_qty':1.00,'product_uom':record.product_id.uom_id.id,'state':'done','picked':True,'company_id':company.id})
+      stock_move_line = env['stock.move.line'].create({'move_id':stock_move.id,'picking_id':update_prod_move.id,'picking_type_id':update_prod_move.picking_type_id.id,'product_id':record.product_id.id,'product_uom_id':record.product_id.uom_id.id,'location_id':update_prod_move.location_id.id,'location_dest_id':update_prod_move.location_dest_id.id,'quantity':1.00,'company_id':company.id})
 
       update_prod_move.write({'state':'done'})
 
@@ -227,7 +227,7 @@ if record.id:
 
   seq = env['ir.sequence'].with_context(company_id=company.id).next_by_code('repair.serial.seq')
 
-  rep_serial = env['stock.production.lot'].create({'name':seq,'product_id':record.product_id.id,'company_id':company.id})
+  rep_serial = env['stock.lot'].create({'name':seq,'product_id':record.product_id.id,'company_id':company.id})
   record['x_studio_serial_no'] = rep_serial.id
   record['lot_id'] = rep_serial.id
   record['x_studio_repair_serial_created'] = True
@@ -242,8 +242,8 @@ if record.id:
 
      update_prod_move = env['stock.picking'].search([('id', '=', prod_move.id),('company_id', '=', company.id)],limit=1)
      if update_prod_move:
-      stock_move = env['stock.move'].create({'picking_id':update_prod_move.id,'name':('New Move:'+record.product_id.name),'reference':update_prod_move.name,'picking_type_id':update_prod_move.picking_type_id.id,'product_id':record.product_id.id,'location_id':update_prod_move.location_id.id,'location_dest_id':update_prod_move.location_dest_id.id,'product_uom_qty':1.00,'product_uom':record.product_id.uom_id.id,'state':'done','company_id':company.id})
-      stock_move_line = env['stock.move.line'].create({'move_id':stock_move.id,'picking_id':update_prod_move.id,'picking_type_id':update_prod_move.picking_type_id.id,'product_id':record.product_id.id,'product_uom_id':record.product_id.uom_id.id,'location_id':update_prod_move.location_id.id,'location_dest_id':update_prod_move.location_dest_id.id,'lot_id':record.x_studio_serial_no.id,'qty_done':1.00,'company_id':company.id})
+      stock_move = env['stock.move'].create({'picking_id':update_prod_move.id,'name':('New Move:'+record.product_id.name),'reference':update_prod_move.name,'picking_type_id':update_prod_move.picking_type_id.id,'product_id':record.product_id.id,'location_id':update_prod_move.location_id.id,'location_dest_id':update_prod_move.location_dest_id.id,'product_uom_qty':1.00,'product_uom':record.product_id.uom_id.id,'state':'done','picked':True,'company_id':company.id})
+      stock_move_line = env['stock.move.line'].create({'move_id':stock_move.id,'picking_id':update_prod_move.id,'picking_type_id':update_prod_move.picking_type_id.id,'product_id':record.product_id.id,'product_uom_id':record.product_id.uom_id.id,'location_id':update_prod_move.location_id.id,'location_dest_id':update_prod_move.location_dest_id.id,'lot_id':record.x_studio_serial_no.id,'quantity':1.00,'company_id':company.id})
 
       update_prod_move.write({'state':'done'})
 

@@ -13,76 +13,67 @@
                         type="object"
                         string="Request RUG Approval"
                         class="btn-primary"
-                        attrs="{'invisible': ['|','|','|',
-                            ('x_studio_rug_confirmed', '!=', True),
-                            ('x_studio_rug_approved', '=', True),
-                            ('x_studio_rug_rejected', '=', True),
-                            ('x_studio_rug_request_sent', '=', True)]}"/>
+                        invisible="not x_studio_rug_confirmed or x_studio_rug_approved or x_studio_rug_rejected or x_studio_rug_request_sent"/>
                 <button name="action_approve_rug"
                         type="object"
                         string="Approve RUG"
                         class="btn-primary"
-                        attrs="{'invisible': ['|','|','|',
-                            ('x_studio_rug_confirmed', '!=', True),
-                            ('x_studio_rug_approved', '=', True),
-                            ('x_studio_rug_rejected', '=', True),
-                            ('x_studio_rug_request_sent', '=', False)]}"/>
+                        invisible="not x_studio_rug_confirmed or x_studio_rug_approved or x_studio_rug_rejected or not x_studio_rug_request_sent"/>
                 <button name="action_reject_rug"
                         type="object"
                         string="Reject RUG"
                         class="btn-danger"
-                        attrs="{'invisible': ['|','|','|',
-                            ('x_studio_rug_confirmed', '!=', True),
-                            ('x_studio_rug_approved', '=', True),
-                            ('x_studio_rug_rejected', '=', True),
-                            ('x_studio_rug_request_sent', '=', False)]}"/>
+                        invisible="not x_studio_rug_confirmed or x_studio_rug_approved or x_studio_rug_rejected or not x_studio_rug_request_sent"/>
+                <!-- Odoo 17: the sale.order 'done' state was replaced by the 'locked' flag -->
                 <button name="action_request_re_estimate"
                         type="object"
                         string="Request Re-estimate"
                         class="btn-warning"
-                        attrs="{'invisible': ['|', ('state', '!=', 'done'), ('x_studio_is_repair_order', '=', False)]}"/>
+                        invisible="not locked or not x_studio_is_repair_order"/>
                 <button name="action_unlock_repair"
                         type="object"
                         string="Unlock"
                         class="btn-secondary"
                         groups="sales_team.group_sale_manager,helpdesk.group_helpdesk_manager"
-                        attrs="{'invisible': ['|', ('state', '!=', 'done'), ('x_studio_is_repair_order', '=', False)]}"/>
+                        invisible="not locked or not x_studio_is_repair_order"/>
             </xpath>
             <!-- RUG status fields below partner -->
             <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="locked" invisible="1"/>
                 <field name="x_studio_rug_confirmed"
                        string="RUG Confirmed"
-                       attrs="{'invisible': [('x_studio_rug_confirmed', '!=', True)]}"/>
+                       invisible="not x_studio_rug_confirmed"/>
                 <field name="x_studio_rug_approved"
                        string="RUG Approved"
                        readonly="1"
                        force_save="1"
-                       attrs="{'invisible': [('x_studio_rug_approved', '!=', True)]}"/>
+                       invisible="not x_studio_rug_approved"/>
                 <field name="x_studio_rug_rejected"
                        string="RUG Rejected"
                        readonly="1"
                        force_save="1"
-                       attrs="{'invisible': [('x_studio_rug_rejected', '!=', True)]}"/>
+                       invisible="not x_studio_rug_rejected"/>
                 <field name="x_studio_reject_reason"
                        string="Reject Reason"
-                       attrs="{'invisible': [('x_studio_rug_confirmed', '!=', True)]}"/>
+                       invisible="not x_studio_rug_confirmed"/>
                 <field name="x_studio_rug_request_sent" invisible="1"/>
                 <field name="x_studio_is_repair_order" invisible="1"/>
             </xpath>
         </field>
     </record>
 
-    <!-- Sale Order tree: optional RUG Confirmed column -->
+    <!-- Sale Order tree: optional RUG Confirmed column
+         (Odoo 17: inherit view_quotation_tree; the onboarding tree derives from it) -->
     <record id="sale_order_tree_rug" model="ir.ui.view">
         <field name="name">sale.order.tree.rug</field>
         <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_quotation_tree_with_onboarding"/>
+        <field name="inherit_id" ref="sale.view_quotation_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="x_studio_rug_confirmed"
                        optional="show"
                        string="RUG Confirmed"
-                       invisible="1"/>
+                       column_invisible="True"/>
             </xpath>
         </field>
     </record>

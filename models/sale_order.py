@@ -48,12 +48,6 @@ class SaleOrder(models.Model):
                         'x_studio_price_unit_original': line.price_unit,
                     })
 
-    def write(self, vals):
-        result = super().write(vals)
-        if 'task_id' in vals:
-            self._apply_rug_price_swap()
-        return result
-
     def action_request_rug_approval(self):
         for order in self:
             order.x_studio_rug_request_sent = True
@@ -113,7 +107,8 @@ class SaleOrder(models.Model):
         res = super().action_confirm()
         repair_orders = self.filtered('x_studio_is_repair_order')
         if repair_orders:
-            repair_orders.action_done()
+            # Odoo 17: sale.order 'done' state removed; locking replaces action_done()
+            repair_orders.action_lock()
         return res
 
     def action_request_re_estimate(self):
@@ -183,6 +178,8 @@ class SaleOrder(models.Model):
     def write(self, vals):
         old_states = {so.id: so.state for so in self} if 'state' in vals else {}
         result = super().write(vals)
+        if 'task_id' in vals:
+            self._apply_rug_price_swap()
         if 'state' not in vals:
             return result
         new_state = vals['state']

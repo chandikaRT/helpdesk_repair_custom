@@ -14,7 +14,8 @@
                 <field name="x_studio_repair_normal_without_serial_no" invisible="1"/>
             </xpath>
             <xpath expr="//field[@name='picking_id']" position="attributes">
-                <attribute name="attrs">{'readonly': ['|','|',('x_studio_repair_rug', '!=', False),('x_studio_repair_normal_with_serial_no', '!=', False),('x_studio_repair_normal_without_serial_no', '!=', False)],'required': [('ticket_id', '!=', False)]}</attribute>
+                <attribute name="readonly">x_studio_repair_rug or x_studio_repair_normal_with_serial_no or x_studio_repair_normal_without_serial_no</attribute>
+                <attribute name="required">ticket_id</attribute>
             </xpath>
         </field>
     </record>
@@ -29,15 +30,15 @@
             <xpath expr="//field[@name='location_id']" position="before">
                 <field name="x_studio_suggested_location_id" string="Suggested Return Location"
                        options="{&quot;no_create&quot;: true}"
-                       attrs="{&quot;invisible&quot;: [[&quot;company_id&quot;,&quot;!=&quot;,1]]}"/>
+                       invisible="company_id != 1"/>
                 <field name="x_studio_suggested_location_id_1" string="Suggested Return Location"
                        options="{&quot;no_create&quot;: true}"
-                       attrs="{&quot;invisible&quot;: [[&quot;company_id&quot;,&quot;!=&quot;,2]]}"/>
+                       invisible="company_id != 2"/>
             </xpath>
             <xpath expr="//footer/button[@name='create_returns']" position="after">
                 <button type="action" name="%(helpdesk_repair_custom.action_rug_return_from_helpdesk)d"
                         string="Return" class="btn-primary"
-                        attrs="{&quot;invisible&quot;: [&quot;|&quot;,[&quot;ticket_id&quot;,&quot;=&quot;,False],[&quot;x_studio_repair_rug&quot;,&quot;!=&quot;,True]]}"/>
+                        invisible="not ticket_id or not x_studio_repair_rug"/>
             </xpath>
         </field>
     </record>

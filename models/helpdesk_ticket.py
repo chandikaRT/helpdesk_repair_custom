@@ -27,9 +27,9 @@ class HelpdeskTicket(models.Model):
         'stock.location', string='Return Receipt Location')
 
     # ── Serials & product ────────────────────────────────────────────────────
-    x_studio_serial_no = fields.Many2one('stock.production.lot', string='Serial Number')
+    x_studio_serial_no = fields.Many2one('stock.lot', string='Serial Number')
     x_studio_serial_number = fields.Many2one(
-        'stock.production.lot', string='Serial Number-11')
+        'stock.lot', string='Serial Number-11')
     x_studio_sn_updated = fields.Boolean(string='SN Updated')
     x_studio_tracking = fields.Selection([
         ('serial', 'By Unique Serial Number'),

@@ -40,7 +40,7 @@ class AccountMove(models.Model):
 
         lines = self.env['account.move.line'].search([
             ('move_id', '=', self.id),
-            ('account_id.user_type_id.internal_group', '=', 'income'),
+            ('account_id.internal_group', '=', 'income'),
         ])
         if lines:
             was_posted = self.state == 'posted'

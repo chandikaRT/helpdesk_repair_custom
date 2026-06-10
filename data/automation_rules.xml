@@ -1,12 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ── Server actions for automation rules ── -->
+    <!--
+        Odoo 17: base.automation no longer delegates to a single ir.actions.server
+        (action_server_id removed). The automation rule is now a standalone record
+        (with its own name/model_id/trigger) and the server actions point back to it
+        via base_automation_id with usage='base_automation'.
+        Automation rules are therefore declared first, then their server actions.
+    -->
+
+    <!-- ── RR - Repair Seq.No (on create) ── -->
+
+    <record id="automation_repair_seq" model="base.automation">
+        <field name="name">RR - Repair Seq.No</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="trigger">on_create</field>
+        <field name="active">True</field>
+    </record>
 
     <record id="act_automation_repair_seq" model="ir.actions.server">
         <field name="name">RR - Repair Seq.No</field>
         <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
         <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="automation_repair_seq"/>
         <field name="code"><![CDATA[
 if record.name:
  seq = env['ir.sequence'].next_by_code('repair.seq')
@@ -14,10 +31,22 @@ if record.name:
 ]]></field>
     </record>
 
+    <!-- ── RR - Auto Select Product for RUG Repairs (on UI change of serial no) ── -->
+
+    <record id="automation_auto_product_from_serial" model="base.automation">
+        <field name="name">RR - Auto Select Product for RUG Repairs</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="trigger">on_change</field>
+        <field name="active">True</field>
+        <field name="on_change_field_ids" eval="[(4, ref('helpdesk_repair_custom.field_helpdesk_ticket__x_studio_serial_no'))]"/>
+    </record>
+
     <record id="act_automation_auto_product_from_serial" model="ir.actions.server">
         <field name="name">RR - Auto Select Product for RUG Repairs</field>
         <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
         <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="automation_auto_product_from_serial"/>
         <field name="code"><![CDATA[
 if record.x_studio_serial_no:
   company_id = env.context.get('allowed_company_ids', [env.user.company_id.id])[0]
@@ -52,10 +81,22 @@ else:
 ]]></field>
     </record>
 
+    <!-- ── RR - Auto Populate Repair Location (on UI change of return receipt location) ── -->
+
+    <record id="automation_populate_repair_location" model="base.automation">
+        <field name="name">RR - Auto Populate Repair Location</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="trigger">on_change</field>
+        <field name="active">True</field>
+        <field name="on_change_field_ids" eval="[(4, ref('helpdesk_repair_custom.field_helpdesk_ticket__x_studio_return_receipt_location'))]"/>
+    </record>
+
     <record id="act_automation_populate_repair_location" model="ir.actions.server">
         <field name="name">RR - Auto Populate Repair Location</field>
         <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
         <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="automation_populate_repair_location"/>
         <field name="code"><![CDATA[
 if record.x_studio_return_receipt_location != False:
   record['x_studio_repair_location'] = record.x_studio_return_receipt_location
@@ -64,10 +105,22 @@ else:
 ]]></field>
     </record>
 
+    <!-- ── RR - Auto Select Product for RUG Repairs-33 (clear on serial change) ── -->
+
+    <record id="automation_clear_on_serial_change" model="base.automation">
+        <field name="name">RR - Auto Select Product for RUG Repairs-33</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="trigger">on_change</field>
+        <field name="active">True</field>
+        <field name="on_change_field_ids" eval="[(4, ref('helpdesk_repair_custom.field_helpdesk_ticket__x_studio_serial_no'))]"/>
+    </record>
+
     <record id="act_automation_clear_on_serial_change" model="ir.actions.server">
         <field name="name">RR - Auto Select Product for RUG Repairs-33</field>
         <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
         <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="automation_clear_on_serial_change"/>
         <field name="code"><![CDATA[
 record['sale_order_id'] = False
 record['x_studio_picking_id'] = False
@@ -79,20 +132,43 @@ if not record.x_studio_normal_repair_without_serial_no:
 ]]></field>
     </record>
 
+    <!-- ── RR - Validate Cancelled Tickets (on deletion) ── -->
+
+    <record id="automation_validate_cancelled_delete" model="base.automation">
+        <field name="name">RR - Validate Cancelled Tickets</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
+        <field name="trigger">on_unlink</field>
+        <field name="filter_domain">[["x_studio_cancelled","=",True]]</field>
+        <field name="active">True</field>
+    </record>
+
     <record id="act_automation_validate_cancelled_delete" model="ir.actions.server">
         <field name="name">RR - Validate Cancelled Tickets</field>
         <field name="model_id" ref="helpdesk.model_helpdesk_ticket"/>
         <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="automation_validate_cancelled_delete"/>
         <field name="code"><![CDATA[
 if record.x_studio_cancelled == True:
   raise UserError('Cancelled tickets can not be deleted.')
 ]]></field>
     </record>
 
+    <!-- ── JIN - Company Id in Helpdesk Stage (on create) ── -->
+
+    <record id="automation_stage_company" model="base.automation">
+        <field name="name">JIN - Company Id in Helpdesk Stage</field>
+        <field name="model_id" ref="helpdesk.model_helpdesk_stage"/>
+        <field name="trigger">on_create</field>
+        <field name="active">True</field>
+    </record>
+
     <record id="act_automation_stage_company" model="ir.actions.server">
         <field name="name">JIN - Company Id in Helpdesk Stage</field>
         <field name="model_id" ref="helpdesk.model_helpdesk_stage"/>
         <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="automation_stage_company"/>
         <field name="code"><![CDATA[
 company_id = env.context.get('allowed_company_ids', [env.user.company_id.id])[0]
 company = env['res.company'].browse(company_id)
@@ -101,77 +177,39 @@ record['x_studio_company_id'] = company.id
 ]]></field>
     </record>
 
-    <!-- ── Automation rules ── -->
-
-    <record id="automation_repair_seq" model="base.automation">
-        <field name="action_server_id" ref="act_automation_repair_seq"/>
-        <field name="trigger">on_create</field>
-        <field name="active">True</field>
-    </record>
-
-    <record id="automation_auto_product_from_serial" model="base.automation">
-        <field name="action_server_id" ref="act_automation_auto_product_from_serial"/>
-        <field name="trigger">on_change</field>
-        <field name="active">True</field>
-        <field name="on_change_field_ids" eval="[(4, ref('helpdesk_repair_custom.field_helpdesk_ticket__x_studio_serial_no'))]"/>
-    </record>
-
-    <record id="automation_populate_repair_location" model="base.automation">
-        <field name="action_server_id" ref="act_automation_populate_repair_location"/>
-        <field name="trigger">on_change</field>
-        <field name="active">True</field>
-        <field name="on_change_field_ids" eval="[(4, ref('helpdesk_repair_custom.field_helpdesk_ticket__x_studio_return_receipt_location'))]"/>
-    </record>
-
-    <record id="automation_clear_on_serial_change" model="base.automation">
-        <field name="action_server_id" ref="act_automation_clear_on_serial_change"/>
-        <field name="trigger">on_change</field>
-        <field name="active">True</field>
-        <field name="on_change_field_ids" eval="[(4, ref('helpdesk_repair_custom.field_helpdesk_ticket__x_studio_serial_no'))]"/>
-    </record>
-
-    <record id="automation_validate_cancelled_delete" model="base.automation">
-        <field name="action_server_id" ref="act_automation_validate_cancelled_delete"/>
-        <field name="trigger">on_unlink</field>
-        <field name="filter_domain">[["x_studio_cancelled","=",True]]</field>
-        <field name="active">True</field>
-    </record>
-
-    <record id="automation_stage_company" model="base.automation">
-        <field name="action_server_id" ref="act_automation_stage_company"/>
-        <field name="trigger">on_create</field>
-        <field name="active">True</field>
-    </record>
-
     <!-- ── RUG: price swap to cost is handled in sale_order.py _apply_rug_price_swap / write() ── -->
 
     <!-- ── RUG: validate invoice (set payment_state=in_payment) on write ── -->
+
+    <record id="automation_validate_rug_invoice" model="base.automation">
+        <field name="name">RR - Validate RUG in Customer Invoice</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="trigger">on_write</field>
+        <field name="active">True</field>
+        <field name="trigger_field_ids" eval="[
+            (4, ref('helpdesk_repair_custom.field_account_move__x_studio_rug_acc_updated')),
+        ]"/>
+    </record>
 
     <record id="act_automation_validate_rug_invoice" model="ir.actions.server">
         <field name="name">RR - Validate RUG in Customer Invoice</field>
         <field name="model_id" ref="account.model_account_move"/>
         <field name="state">code</field>
+        <field name="usage">base_automation</field>
+        <field name="base_automation_id" ref="automation_validate_rug_invoice"/>
         <field name="code"><![CDATA[
 if record.x_studio_rug_confirmed == True:
     if record.x_studio_rug_acc_updated == True:
         if record.state == 'posted':
+            # Odoo 17: 'done' state removed on sale.order; a confirmed+locked SO replaces it
             so = env['sale.order'].search(
-                [('id', '=', record.x_studio_sale_id.id), ('state', '=', 'done')],
+                [('id', '=', record.x_studio_sale_id.id), ('state', '=', 'sale'), ('locked', '=', True)],
                 limit=1)
             if so:
                 record['payment_state'] = 'in_payment'
             else:
                 raise UserError('Incomplete sales order. Process terminated.')
 ]]></field>
-    </record>
-
-    <record id="automation_validate_rug_invoice" model="base.automation">
-        <field name="action_server_id" ref="act_automation_validate_rug_invoice"/>
-        <field name="trigger">on_write</field>
-        <field name="active">True</field>
-        <field name="on_change_field_ids" eval="[
-            (4, ref('helpdesk_repair_custom.field_account_move__x_studio_rug_acc_updated')),
-        ]"/>
     </record>
 
 </odoo>

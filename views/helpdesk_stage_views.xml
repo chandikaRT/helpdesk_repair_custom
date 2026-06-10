@@ -9,7 +9,7 @@
         <field name="priority">99</field>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='sequence']" position="after">
-                <field name="x_studio_company_id" string="Company" attrs="{}"/>
+                <field name="x_studio_company_id" string="Company"/>
             </xpath>
         </field>
     </record>

@@ -13,7 +13,7 @@
                 <field optional="show" name="x_studio_rug_confirmed" string="RUG Confirmed"/>
                 <field optional="show" name="x_studio_with_serial_no" string="With Serial No"/>
                 <field optional="show" name="x_studio_without_serial_no" string="Without Serial No"/>
-                <field name="id" optional="show" attrs="{}" invisible="1"/>
+                <field name="id" optional="show" column_invisible="True"/>
             </xpath>
         </field>
     </record>
@@ -29,7 +29,7 @@
                         <field name="name"/>
                         <field name="x_studio_rug" string="RUG"/>
                         <field name="x_studio_rug_confirmed" string="RUG Confirmed"
-                               attrs="{'invisible': [('x_studio_rug','=',False)]}"/>
+                               invisible="not x_studio_rug"/>
                         <field name="x_studio_with_serial_no" string="With Serial No"/>
                         <field name="x_studio_without_serial_no" string="Without Serial No"/>
                     </group>

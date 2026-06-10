@@ -25,7 +25,7 @@
             <form string="Condition">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -82,7 +82,7 @@
             <form string="Symptom Area">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -140,7 +140,7 @@
             <form string="Symptom Code">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -202,7 +202,7 @@
             <form string="Diagnosis Area">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -260,7 +260,7 @@
             <form string="Diagnosis Code">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -322,7 +322,7 @@
             <form string="Repair Reason">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -379,7 +379,7 @@
             <form string="Repair Sub Reason">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -440,7 +440,7 @@
             <form string="Resolution">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -497,7 +497,7 @@
             <form string="Repair Stage">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>
@@ -559,7 +559,7 @@
             <form string="Task Diagnosis">
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
-                            attrs="{'invisible': [('x_active', '=', True)]}"/>
+                            invisible="x_active"/>
                     <field name="x_active" invisible="1"/>
                     <div class="oe_title">
                         <label for="x_name"/>

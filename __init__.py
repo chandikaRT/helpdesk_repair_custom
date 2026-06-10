@@ -47,10 +47,8 @@ def _ensure_stages(env):
         })
 
 
-def post_init_hook(cr, registry):
-    from odoo import api, SUPERUSER_ID
-    env = api.Environment(cr, SUPERUSER_ID, {})
-
+def post_init_hook(env):
+    # Odoo 17: hooks receive the environment directly
     _ensure_stages(env)
 
     # Enable product repairs on all helpdesk teams so product_id is visible on tickets
@@ -80,8 +78,9 @@ def post_init_hook(cr, registry):
         'RR - Validate Cancelled Tickets',
         'JIN - Company Id in Helpdesk Stage',
     }
+    # Odoo 17: base.automation links its server actions via action_server_ids
     old_rules = env['base.automation'].search([
-        ('action_server_id.name', 'in', list(superseded_names)),
+        ('action_server_ids.name', 'in', list(superseded_names)),
         ('id', 'not in', list(our_ids)),
     ])
     if old_rules:

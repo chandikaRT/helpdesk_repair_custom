@@ -13,12 +13,7 @@
                         type="object"
                         string="Update RUG Account"
                         class="btn-primary"
-                        attrs="{'invisible': ['|', '|',
-                            ('x_studio_rug_confirmed', '=', False),
-                            ('x_studio_rug_acc_updated', '=', True),
-                            '&amp;',
-                            ('x_studio_rug_confirmed', '=', True),
-                            ('x_studio_rug_rejected', '=', True)]}"/>
+                        invisible="not x_studio_rug_confirmed or x_studio_rug_acc_updated or (x_studio_rug_confirmed and x_studio_rug_rejected)"/>
             </xpath>
             <!-- Hidden RUG state fields (force_save so they stay synced) -->
             <xpath expr="//field[@name='partner_id']" position="after">
@@ -30,17 +25,11 @@
                        force_save="1"
                        invisible="1"/>
             </xpath>
-            <!-- Gap A: hide Confirm/Post button while RUG is confirmed-but-not-updated -->
+            <!-- Gap A: hide Confirm/Post button while RUG is confirmed-but-not-updated.
+                 Odoo 17: the draft/auto_post/currency-warning checks are folded into the
+                 computed hide_post_button field on the base form. -->
             <xpath expr="//header/button[@name='action_post'][2]" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', '|', '|', '|',
-                    ('state', '!=', 'draft'),
-                    ('auto_post', '=', True),
-                    ('move_type', '=', 'entry'),
-                    ('display_inactive_currency_warning', '=', True),
-                    '&amp;', '&amp;',
-                    ('x_studio_rug_confirmed', '=', True),
-                    ('x_studio_rug_rejected', '=', False),
-                    ('x_studio_rug_acc_updated', '=', False)]}</attribute>
+                <attribute name="invisible">hide_post_button or move_type == 'entry' or (x_studio_rug_confirmed and not x_studio_rug_rejected and not x_studio_rug_acc_updated)</attribute>
             </xpath>
             <!-- Gap C: read-only Journal Items tab for all users -->
             <xpath expr="//notebook" position="inside">
@@ -53,7 +42,7 @@
                             <field name="name"/>
                             <field name="debit" sum="Total Debit"/>
                             <field name="credit" sum="Total Credit"/>
-                            <field name="display_type" invisible="1"/>
+                            <field name="display_type" column_invisible="True"/>
                         </tree>
                     </field>
                 </page>

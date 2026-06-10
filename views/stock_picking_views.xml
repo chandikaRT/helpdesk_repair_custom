@@ -12,7 +12,7 @@
                 For RUG-type repair flows, the invoice is raised after delivery, so validate must
                 remain available even when repair_payment_made = False.
 
-                This view (priority 100) mirrors the Studio attrs exactly, but adds a third
+                This view (priority 100) mirrors the Studio rules, but adds a third
                 AND clause to the repair-payment condition: x_studio_rug_repair = False.
                 Result: the payment-gate only blocks non-RUG repair deliveries.
 
@@ -20,11 +20,11 @@
                   1. x_studio_cancelled = True
                   2. x_studio_valid_transfer_lines = False
                   3. x_studio_transfer_rejected = True
-                  4. state in (waiting, confirmed)
-                  5. show_validate = False
-                  6. quotation_type_2 = Repair AND repair_payment_made = False AND NOT rug_repair
-                  7. pr_type = Import AND update_consignment = False
-                  8. quotation_type_2 = Project AND budget_created = False
+                  4. state not validatable (Odoo 17: two Validate buttons split by state;
+                     the show_validate field was removed in 17, state covers it)
+                  5. quotation_type_2 = Repair AND repair_payment_made = False AND NOT rug_repair
+                  6. pr_type = Import AND update_consignment = False
+                  7. quotation_type_2 = Project AND budget_created = False
             -->
             <xpath expr="//button[@name='button_validate']" position="before">
                 <field name="x_studio_cancelled" invisible="1"/>
@@ -46,34 +46,32 @@
                 <field name="x_studio_ticket_factory_repair" invisible="1"/>
                 <button name="action_dispatch_return" type="object" string="Dispatch"
                         class="btn-primary"
-                        attrs="{'invisible': ['|','|','|','|','|','|',
-                            ('state','!=','done'),
-                            ('x_studio_location_is_customer','=',False),
-                            ('x_studio_helpdesk_ticket_id','=',False),
-                            ('x_studio_so_fully_paid','=',False),
-                            ('x_studio_dispatch_done','=',True),
-                            ('x_studio_ticket_factory_repair','=',False),
-                            ('x_studio_ticket_received_at_sales','=',False)]}"/>
+                        invisible="state != 'done' or not x_studio_location_is_customer or not x_studio_helpdesk_ticket_id or not x_studio_so_fully_paid or x_studio_dispatch_done or not x_studio_ticket_factory_repair or not x_studio_ticket_received_at_sales"/>
             </xpath>
             <!-- Show helpdesk ticket link and source ticket on the picking form body -->
             <xpath expr="//field[@name='location_dest_id']" position="after">
                 <field name="x_studio_need_approval" invisible="1"/>
                 <field name="x_studio_helpdesk_ticket_id" string="Helpdesk Ticket"
                        readonly="1" force_save="True"
-                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_helpdesk_ticket_id&quot;,&quot;=&quot;,False]]}"/>
+                       invisible="not x_studio_helpdesk_ticket_id"/>
                 <field name="x_studio_created_from_help_ticket" string="Created From Ticket"
                        readonly="1" force_save="True"
-                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_created_from_help_ticket&quot;,&quot;=&quot;,False]]}"/>
+                       invisible="not x_studio_created_from_help_ticket"/>
                 <field name="x_studio_task_status" invisible="1"/>
             </xpath>
             <!-- Sales order link in the right group (before scheduled date) -->
             <xpath expr="//label[@for='scheduled_date']" position="before">
                 <field name="x_studio_sales_order" string="Sales Order"
                        readonly="1" force_save="True"
-                       attrs="{&quot;invisible&quot;: [[&quot;x_studio_sales_order&quot;,&quot;=&quot;,False]]}"/>
+                       invisible="not x_studio_sales_order"/>
             </xpath>
-            <xpath expr="//button[@name='button_validate']" position="attributes">
-                <attribute name="attrs">{'invisible': ['|','|','|','|','|','|','|',('x_studio_cancelled','=',True),('x_studio_valid_transfer_lines','=',False),('x_studio_transfer_rejected','=',True),('state','in',['waiting','confirmed']),('show_validate','=',False),'&amp;','&amp;',('x_studio_quotation_type_2','=','Repair'),('x_studio_repair_payment_made','=',False),('x_studio_rug_repair','=',False),'&amp;',('x_studio_pr_type','=','Import'),('x_studio_update_consignment','=',False),'&amp;',('x_studio_quotation_type_2','=','Project'),('x_studio_budget_created','=',False)]}</attribute>
+            <!-- Odoo 17 has two Validate buttons (highlighted for waiting/assigned,
+                 plain for draft/confirmed immediate transfers). Gate both. -->
+            <xpath expr="//button[@name='button_validate'][1]" position="attributes">
+                <attribute name="invisible">state in ('draft', 'waiting', 'confirmed', 'done', 'cancel') or x_studio_cancelled or not x_studio_valid_transfer_lines or x_studio_transfer_rejected or (x_studio_quotation_type_2 == 'Repair' and not x_studio_repair_payment_made and not x_studio_rug_repair) or (x_studio_pr_type == 'Import' and not x_studio_update_consignment) or (x_studio_quotation_type_2 == 'Project' and not x_studio_budget_created)</attribute>
+            </xpath>
+            <xpath expr="//button[@name='button_validate'][2]" position="attributes">
+                <attribute name="invisible">state in ('waiting', 'confirmed', 'assigned', 'done', 'cancel') or x_studio_cancelled or not x_studio_valid_transfer_lines or x_studio_transfer_rejected or (x_studio_quotation_type_2 == 'Repair' and not x_studio_repair_payment_made and not x_studio_rug_repair) or (x_studio_pr_type == 'Import' and not x_studio_update_consignment) or (x_studio_quotation_type_2 == 'Project' and not x_studio_budget_created)</attribute>
             </xpath>
         </field>
     </record>

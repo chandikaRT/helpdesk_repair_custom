@@ -10,12 +10,15 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='tag_ids']" position="after">
                 <field name="x_studio_confirm_draft_quotation" string="Confirm Draft Quotation"
-                       force_save="True" attrs="{}" readonly="1"/>
+                       force_save="True" readonly="1"/>
             </xpath>
         </field>
     </record>
 
-    <!-- ── repair.order button customizations (Studio, priority 50000) ── -->
+    <!-- ── repair.order button customizations (Studio, priority 50000) ──
+         Odoo 17: the repair app was refactored. action_send_mail and
+         print_repair_order no longer exist (quotations now go through the
+         linked sale order), and there is a single action_repair_cancel button. -->
     <record id="repair_order_view_form_studio_buttons" model="ir.ui.view">
         <field name="name">repair.order.form.studio.buttons</field>
         <field name="model">repair.order</field>
@@ -24,32 +27,22 @@
         <field name="arch" type="xml">
             <data>
 
-                <!-- Confirm Draft Quotation button (before Validate) -->
+                <!-- Confirm Draft Quotation button (before Confirm Repair) -->
                 <xpath expr="//header/button[@name='action_validate']" position="before">
                     <button type="action"
                             name="%(helpdesk_repair_custom.action_confirm_draft_quotation)d"
                             string="Confirm Draft Quotation" class="btn-primary"
-                            attrs="{'invisible': [('x_studio_confirm_draft_quotation', '=', True)]}"/>
+                            invisible="x_studio_confirm_draft_quotation or state != 'draft'"/>
                 </xpath>
 
-                <!-- Validate: hide until quotation confirmed -->
+                <!-- Confirm Repair: hide until quotation confirmed (keep base state rule) -->
                 <xpath expr="//header/button[@name='action_validate']" position="attributes">
-                    <attribute name="attrs">{'invisible': ['|',('x_studio_confirm_draft_quotation', '=', False)]}</attribute>
+                    <attribute name="invisible">state != 'draft' or not x_studio_confirm_draft_quotation</attribute>
                 </xpath>
 
-                <!-- Send by Email: hide until quotation confirmed -->
-                <xpath expr="//header/button[@name='action_send_mail']" position="attributes">
-                    <attribute name="attrs">{'invisible': ['|',('x_studio_confirm_draft_quotation', '=', False)]}</attribute>
-                </xpath>
-
-                <!-- Print: hide until quotation confirmed -->
-                <xpath expr="//header/button[@name='print_repair_order']" position="attributes">
-                    <attribute name="attrs">{'invisible': ['|',('x_studio_confirm_draft_quotation', '=', False)]}</attribute>
-                </xpath>
-
-                <!-- Cancel (second): modified visibility -->
-                <xpath expr="//header/button[@name='action_repair_cancel'][2]" position="attributes">
-                    <attribute name="attrs">{'invisible': ['|','|',('x_studio_confirm_draft_quotation', '=', False),('state', '=', 'cancel'),('invoice_state', '=', 'draft')]}</attribute>
+                <!-- Cancel Repair: hide until quotation confirmed (keep base state rule) -->
+                <xpath expr="//header/button[@name='action_repair_cancel']" position="attributes">
+                    <attribute name="invisible">not x_studio_confirm_draft_quotation or state in ('done', 'cancel')</attribute>
                 </xpath>
 
             </data>

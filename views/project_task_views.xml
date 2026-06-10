@@ -18,17 +18,12 @@
                         string="Validate Diagnosis"
                         type="object"
                         class="btn-primary"
-                        attrs="{'invisible': ['|',
-                                ('x_studio_diagnosis_validated', '=', True),
-                                ('helpdesk_ticket_id', '=', False)]}"/>
+                        invisible="x_studio_diagnosis_validated or not helpdesk_ticket_id"/>
                 <button name="action_tested_ok"
                         string="Tested OK"
                         type="object"
                         class="btn-primary"
-                        attrs="{'invisible': ['|','|',
-                            ('material_line_product_count', '&gt;', 0),
-                            ('helpdesk_ticket_id', '=', False),
-                            ('x_studio_end_quick_repair', '=', True)]}"/>
+                        invisible="material_line_product_count &gt; 0 or not helpdesk_ticket_id or x_studio_end_quick_repair"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Repair Image" name="studio_page_VxXz6">
@@ -36,12 +31,12 @@
                         <group>
                             <field widget="image" name="x_studio_repair_image_01"
                                    string="Repair Image 01" options='{"size": [0, 270]}'
-                                   attrs="{'readonly': [('x_studio_diagnosis_validated', '=', True)]}"/>
+                                   readonly="x_studio_diagnosis_validated"/>
                         </group>
                         <group>
                             <field widget="image" name="x_studio_repair_image_02"
                                    string="Repair Image 02" options='{"size": [0, 270]}'
-                                   attrs="{'readonly': [('x_studio_diagnosis_validated', '=', True)]}"/>
+                                   readonly="x_studio_diagnosis_validated"/>
                         </group>
                     </group>
                 </page>
@@ -58,17 +53,17 @@
                     </group>
                 </page>
                 <page string="Repair Diagnosis" name="studio_page_M5qFQ"
-                      attrs="{'invisible': [['helpdesk_ticket_id', '=', False]]}">
+                      invisible="not helpdesk_ticket_id">
                     <field name="x_studio_diagnosis_ids" force_save="True"
-                           attrs="{'readonly': [('x_studio_diagnosis_validated', '=', True)]}">
+                           readonly="x_studio_diagnosis_validated">
                         <tree editable="bottom">
                             <field name="x_studio_sequence" widget="handle"/>
-                            <field name="x_name" invisible="1"/>
-                            <field name="x_studio_condition" optional="show" invisible="1"
+                            <field name="x_name" column_invisible="True"/>
+                            <field name="x_studio_condition" optional="show" column_invisible="True"
                                    options="{'no_create': True, 'no_quick_create': True}"/>
-                            <field name="x_studio_symptom_area" optional="show" invisible="1"
+                            <field name="x_studio_symptom_area" optional="show" column_invisible="True"
                                    options="{'no_create': True, 'no_quick_create': True}"/>
-                            <field name="x_studio_symptom_code" optional="show" invisible="1"
+                            <field name="x_studio_symptom_code" optional="show" column_invisible="True"
                                    options="{'no_create': True, 'no_quick_create': True}"/>
                             <field name="x_studio_description" optional="show"/>
                             <field name="x_studio_diagnosis_area" optional="show" required="1"
@@ -85,7 +80,7 @@
                                    options="{'no_create': True, 'no_quick_create': True}"/>
                             <field name="x_studio_repair_stage" optional="show" required="1"
                                    options="{'no_create': True, 'no_quick_create': True}"/>
-                            <field name="x_studio_task_id" string="Task" optional="show" invisible="1"/>
+                            <field name="x_studio_task_id" string="Task" optional="show" column_invisible="True"/>
                         </tree>
                     </field>
                 </page>
@@ -100,10 +95,7 @@
         <field name="inherit_id" ref="project.view_task_form2"/>
         <field name="arch" type="xml">
             <xpath expr="//button[@name='action_fsm_view_material']" position="attributes">
-                <attribute name="attrs">{'invisible': ['|', '|',
-                    ('partner_id', '=', False),
-                    ('allow_material', '=', False),
-                    ('x_studio_diagnosis_validated', '=', False)]}</attribute>
+                <attribute name="invisible">not partner_id or not allow_material or not x_studio_diagnosis_validated</attribute>
             </xpath>
         </field>
     </record>
